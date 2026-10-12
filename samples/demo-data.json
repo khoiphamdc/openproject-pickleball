@@ -1,0 +1,268 @@
+{
+  "schemaVersion": "1.0",
+  "isDemo": true,
+  "note": "Fictional normalized data; IDs are not valid IDs on your OpenProject instance. Not an API import payload.",
+  "report": {
+    "projectId": 10,
+    "from": "2026-10-01T00:00:00+07:00",
+    "toExclusive": "2026-10-11T00:00:00+07:00",
+    "asOf": "2026-10-10T08:00:00Z",
+    "timezone": "Asia/Ho_Chi_Minh",
+    "ruleVersion": "demo-v1"
+  },
+  "users": [
+    {
+      "id": 1,
+      "name": "A"
+    },
+    {
+      "id": 2,
+      "name": "B"
+    },
+    {
+      "id": 3,
+      "name": "C"
+    },
+    {
+      "id": 99,
+      "name": "Demo Manager"
+    }
+  ],
+  "containers": [
+    {
+      "instanceId": "demo-instance",
+      "workPackageId": 1000,
+      "projectId": 10,
+      "type": "Epic",
+      "parentId": null,
+      "isExecutionUnit": false
+    },
+    {
+      "instanceId": "demo-instance",
+      "workPackageId": 1100,
+      "projectId": 10,
+      "type": "Story",
+      "parentId": 1000,
+      "isExecutionUnit": false
+    }
+  ],
+  "tasks": [
+    {
+      "instanceId": "demo-instance",
+      "workPackageId": 101,
+      "projectId": 10,
+      "subject": "Demo Task 101",
+      "type": "Task",
+      "parentId": 1100,
+      "isExecutionUnit": true,
+      "ownerAtBaselineId": 1,
+      "currentAssigneeId": 1,
+      "baselineDifficulty": 5,
+      "baselineDueDate": "2026-10-08",
+      "acceptedAt": "2026-10-08T10:00:00Z",
+      "status": "DONE",
+      "baselineVersion": 1,
+      "timeEvidence": "confirmed-demo",
+      "contributions": [
+        {
+          "userId": 1,
+          "share": 1
+        }
+      ],
+      "expectedScore": 4.0
+    },
+    {
+      "instanceId": "demo-instance",
+      "workPackageId": 102,
+      "projectId": 10,
+      "subject": "Demo Task 102",
+      "type": "Task",
+      "parentId": 1100,
+      "isExecutionUnit": true,
+      "ownerAtBaselineId": 1,
+      "currentAssigneeId": 1,
+      "baselineDifficulty": 3,
+      "baselineDueDate": "2026-10-07",
+      "acceptedAt": "2026-10-09T10:00:00Z",
+      "status": "DONE",
+      "baselineVersion": 1,
+      "timeEvidence": "confirmed-demo",
+      "contributions": [
+        {
+          "userId": 1,
+          "share": 1
+        }
+      ],
+      "expectedScore": 2.2
+    },
+    {
+      "instanceId": "demo-instance",
+      "workPackageId": 103,
+      "projectId": 10,
+      "subject": "Demo Task 103",
+      "type": "Task",
+      "parentId": 1100,
+      "isExecutionUnit": true,
+      "ownerAtBaselineId": 2,
+      "currentAssigneeId": 2,
+      "baselineDifficulty": 8,
+      "baselineDueDate": "2026-10-08",
+      "acceptedAt": "2026-10-08T10:00:00Z",
+      "status": "DONE",
+      "baselineVersion": 1,
+      "timeEvidence": "confirmed-demo",
+      "contributions": [
+        {
+          "userId": 2,
+          "share": 1
+        }
+      ],
+      "expectedScore": 4.0
+    },
+    {
+      "instanceId": "demo-instance",
+      "workPackageId": 104,
+      "projectId": 10,
+      "subject": "Demo Task 104",
+      "type": "Task",
+      "parentId": 1100,
+      "isExecutionUnit": true,
+      "ownerAtBaselineId": 2,
+      "currentAssigneeId": 2,
+      "baselineDifficulty": 2,
+      "baselineDueDate": "2026-10-08",
+      "acceptedAt": "2026-10-07T10:00:00Z",
+      "status": "DONE",
+      "baselineVersion": 1,
+      "timeEvidence": "confirmed-demo",
+      "contributions": [
+        {
+          "userId": 2,
+          "share": 1
+        }
+      ],
+      "expectedScore": 2.1
+    },
+    {
+      "instanceId": "demo-instance",
+      "workPackageId": 105,
+      "projectId": 10,
+      "subject": "Demo Task 105",
+      "type": "Task",
+      "parentId": 1100,
+      "isExecutionUnit": true,
+      "ownerAtBaselineId": 3,
+      "currentAssigneeId": 3,
+      "baselineDifficulty": 3,
+      "baselineDueDate": "2026-10-08",
+      "acceptedAt": "2026-10-08T10:00:00Z",
+      "status": "DONE",
+      "baselineVersion": 1,
+      "timeEvidence": "confirmed-demo",
+      "contributions": [
+        {
+          "userId": 3,
+          "share": 1
+        }
+      ],
+      "expectedScore": 3.0
+    },
+    {
+      "instanceId": "demo-instance",
+      "workPackageId": 106,
+      "projectId": 10,
+      "subject": "Demo Task 106",
+      "type": "Task",
+      "parentId": 1100,
+      "isExecutionUnit": true,
+      "ownerAtBaselineId": 3,
+      "currentAssigneeId": 3,
+      "baselineDifficulty": 1,
+      "baselineDueDate": "2026-10-05",
+      "acceptedAt": "2026-10-09T10:00:00Z",
+      "status": "DONE",
+      "baselineVersion": 1,
+      "timeEvidence": "confirmed-demo",
+      "contributions": [
+        {
+          "userId": 3,
+          "share": 1
+        }
+      ],
+      "expectedScore": 0.0
+    }
+  ],
+  "bugs": [
+    {
+      "instanceId": "demo-instance",
+      "bugId": 201,
+      "projectId": 10,
+      "sourceTaskId": 101,
+      "severity": "Medium",
+      "validatedAt": "2026-10-09T12:00:00Z",
+      "isDuplicate": false,
+      "isNotABug": false,
+      "approvedBy": 99
+    },
+    {
+      "instanceId": "demo-instance",
+      "bugId": 202,
+      "projectId": 10,
+      "sourceTaskId": 102,
+      "severity": "Low",
+      "validatedAt": "2026-10-09T12:00:00Z",
+      "isDuplicate": false,
+      "isNotABug": false,
+      "approvedBy": 99
+    },
+    {
+      "instanceId": "demo-instance",
+      "bugId": 203,
+      "projectId": 10,
+      "sourceTaskId": 103,
+      "severity": "Critical",
+      "validatedAt": "2026-10-09T12:00:00Z",
+      "isDuplicate": false,
+      "isNotABug": false,
+      "approvedBy": 99
+    },
+    {
+      "instanceId": "demo-instance",
+      "bugId": 204,
+      "projectId": 10,
+      "sourceTaskId": 106,
+      "severity": "Medium",
+      "validatedAt": "2026-10-09T12:00:00Z",
+      "isDuplicate": false,
+      "isNotABug": false,
+      "approvedBy": 99
+    }
+  ],
+  "expected": {
+    "completedTasks": 6,
+    "validBugs": 4,
+    "tasksWithBugs": 4,
+    "bugsPerTask": 0.6666666666666666,
+    "tasksWithBugsRate": 0.6666666666666666,
+    "people": [
+      {
+        "userId": 1,
+        "completedTasks": 2,
+        "validBugs": 2,
+        "score": 6.2
+      },
+      {
+        "userId": 2,
+        "completedTasks": 2,
+        "validBugs": 1,
+        "score": 6.1
+      },
+      {
+        "userId": 3,
+        "completedTasks": 2,
+        "validBugs": 1,
+        "score": 3.0
+      }
+    ]
+  }
+}

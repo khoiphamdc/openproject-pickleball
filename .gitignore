@@ -1,0 +1,19 @@
+node_modules/
+dist/
+build/
+coverage/
+.env
+.env.*
+!.env.example
+runtime/*
+!runtime/.gitkeep
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.db
+*.sql
+*.dump
+*.log
+.DS_Store
+Thumbs.db
+# Commit sample JSON and dependency lockfiles; never ignore package-lock.json.

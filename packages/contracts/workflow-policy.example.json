@@ -1,0 +1,242 @@
+{
+  "schemaVersion": "1.0",
+  "policyVersion": "workflow-images-2026-10-10",
+  "referenceOnly": true,
+  "note": "Transcribed from four supplied diagrams; role/field/acceptance policy is in docs. No live IDs or runtime enforcement. cancel is a local action key; its label is not specified by the diagrams.",
+  "types": {
+    "Epic": {
+      "initialStatus": "TO DO",
+      "statuses": [
+        "TO DO",
+        "DISCOVERY / PLANNING",
+        "READY",
+        "IN PROGRESS",
+        "REVIEW / ACCEPTANCE",
+        "DONE",
+        "CANCELLED"
+      ],
+      "transitions": [
+        {
+          "from": "TO DO",
+          "action": "Start planning",
+          "to": "DISCOVERY / PLANNING"
+        },
+        {
+          "from": "DISCOVERY / PLANNING",
+          "action": "Ready",
+          "to": "READY"
+        },
+        {
+          "from": "READY",
+          "action": "Start work",
+          "to": "IN PROGRESS"
+        },
+        {
+          "from": "IN PROGRESS",
+          "action": "Send for Review",
+          "to": "REVIEW / ACCEPTANCE"
+        },
+        {
+          "from": "REVIEW / ACCEPTANCE",
+          "action": "Reject",
+          "to": "IN PROGRESS"
+        },
+        {
+          "from": "REVIEW / ACCEPTANCE",
+          "action": "Accept",
+          "to": "DONE"
+        },
+        {
+          "from": "TO DO",
+          "action": "cancel",
+          "to": "CANCELLED"
+        },
+        {
+          "from": "DISCOVERY / PLANNING",
+          "action": "cancel",
+          "to": "CANCELLED"
+        },
+        {
+          "from": "READY",
+          "action": "cancel",
+          "to": "CANCELLED"
+        },
+        {
+          "from": "IN PROGRESS",
+          "action": "cancel",
+          "to": "CANCELLED"
+        },
+        {
+          "from": "REVIEW / ACCEPTANCE",
+          "action": "cancel",
+          "to": "CANCELLED"
+        },
+        {
+          "from": "DONE",
+          "action": "cancel",
+          "to": "CANCELLED"
+        },
+        {
+          "from": "CANCELLED",
+          "action": "REDO",
+          "to": "IN PROGRESS"
+        }
+      ]
+    },
+    "Story": {
+      "initialStatus": "TO DO",
+      "statuses": [
+        "TO DO",
+        "IN PROGRESS",
+        "INSPECT",
+        "DONE",
+        "CANCELLED"
+      ],
+      "transitions": [
+        {
+          "from": "TO DO",
+          "action": "Start work",
+          "to": "IN PROGRESS"
+        },
+        {
+          "from": "IN PROGRESS",
+          "action": "Submit for Review",
+          "to": "INSPECT"
+        },
+        {
+          "from": "INSPECT",
+          "action": "Request Changes",
+          "to": "IN PROGRESS"
+        },
+        {
+          "from": "INSPECT",
+          "action": "DONE",
+          "to": "DONE"
+        },
+        {
+          "from": "TO DO",
+          "action": "cancel",
+          "to": "CANCELLED"
+        },
+        {
+          "from": "IN PROGRESS",
+          "action": "cancel",
+          "to": "CANCELLED"
+        },
+        {
+          "from": "INSPECT",
+          "action": "cancel",
+          "to": "CANCELLED"
+        },
+        {
+          "from": "DONE",
+          "action": "cancel",
+          "to": "CANCELLED"
+        },
+        {
+          "from": "CANCELLED",
+          "action": "REDO",
+          "to": "IN PROGRESS"
+        }
+      ]
+    },
+    "Task": {
+      "initialStatus": "TO DO",
+      "statuses": [
+        "TO DO",
+        "IN PROGRESS",
+        "REVIEW",
+        "DONE",
+        "CANCELLED"
+      ],
+      "transitions": [
+        {
+          "from": "TO DO",
+          "action": "Start work",
+          "to": "IN PROGRESS"
+        },
+        {
+          "from": "IN PROGRESS",
+          "action": "Submit for Review",
+          "to": "REVIEW"
+        },
+        {
+          "from": "REVIEW",
+          "action": "Request Changes",
+          "to": "IN PROGRESS"
+        },
+        {
+          "from": "REVIEW",
+          "action": "Approve",
+          "to": "DONE"
+        },
+        {
+          "from": "TO DO",
+          "action": "cancel",
+          "to": "CANCELLED"
+        },
+        {
+          "from": "IN PROGRESS",
+          "action": "cancel",
+          "to": "CANCELLED"
+        },
+        {
+          "from": "REVIEW",
+          "action": "cancel",
+          "to": "CANCELLED"
+        },
+        {
+          "from": "DONE",
+          "action": "cancel",
+          "to": "CANCELLED"
+        },
+        {
+          "from": "CANCELLED",
+          "action": "REDO",
+          "to": "IN PROGRESS"
+        }
+      ]
+    },
+    "Subtask": {
+      "initialStatus": "TO DO",
+      "statuses": [
+        "TO DO",
+        "IN PROGRESS",
+        "DONE",
+        "CANCELLED"
+      ],
+      "transitions": [
+        {
+          "from": "TO DO",
+          "action": "Start work",
+          "to": "IN PROGRESS"
+        },
+        {
+          "from": "IN PROGRESS",
+          "action": "Complete",
+          "to": "DONE"
+        },
+        {
+          "from": "TO DO",
+          "action": "cancel",
+          "to": "CANCELLED"
+        },
+        {
+          "from": "IN PROGRESS",
+          "action": "cancel",
+          "to": "CANCELLED"
+        },
+        {
+          "from": "DONE",
+          "action": "cancel",
+          "to": "CANCELLED"
+        },
+        {
+          "from": "CANCELLED",
+          "action": "REDO",
+          "to": "IN PROGRESS"
+        }
+      ]
+    }
+  }
+}
