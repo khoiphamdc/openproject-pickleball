@@ -1,0 +1,28 @@
+{
+  "name": "@openproject-ai/api",
+  "version": "1.0.0",
+  "description": "OpenProject MCP Server - Interact with OpenProject via Model Context Protocol",
+  "type": "module",
+  "scripts": {
+    "inspector": "npx @modelcontextprotocol/inspector npx tsx src/mcp/server.ts",
+    "dev": "tsx watch src/mcp/server.ts",
+    "build": "tsc -p tsconfig.json",
+    "backend": "tsx watch src/index.ts",
+    "mcp": "tsx src/mcp/server.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "^2.3.1",
+    "axios": "^1.6.0",
+    "better-sqlite3": "^13.0.3",
+    "dotenv": "^18.0.7",
+    "express": "^5.3.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/express": "^5.0.6",
+    "@types/node": "^20.19.43",
+    "tsx": "^4.23.15",
+    "typescript": "^5.3.0"
+  }
+}
