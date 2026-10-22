@@ -269,9 +269,10 @@ export class OpenProjectClient {
     roleIds: number[],
   ): Promise<Membership> {
     const { data } = await this.http.post<Membership>(
-      `/api/v3/projects/${projectId}/memberships`,
+      "/api/v3/memberships", // Endpoint đúng
       {
         _links: {
+          project: { href: `/api/v3/projects/${projectId}` },
           principal: { href: `/api/v3/users/${userId}` },
           roles: roleIds.map((id) => ({ href: `/api/v3/roles/${id}` })),
         },
@@ -627,6 +628,29 @@ export class OpenProjectClient {
         params: { filters: JSON.stringify(filters) },
       },
     );
+    return data;
+  }
+
+  // ==================== TYPES (WORK PACKAGE TYPES) ====================
+  // Thêm 2 hàm này vào trong class OpenProjectClient (file client.ts)
+
+  async addTypeToProject(
+    projectId: number | string,
+    typeId: number,
+  ): Promise<void> {
+    await this.http.patch(`/api/v3/projects/${projectId}/types`, {
+      _links: {
+        added: [{ href: `/api/v3/types/${typeId}` }],
+      },
+    });
+  }
+
+  async createSystemType(typeName: string): Promise<any> {
+    const { data } = await this.http.post(`/api/v3/types`, {
+      name: typeName,
+      color: "#1A67A3",
+      isMilestone: typeName.toLowerCase() === "epic",
+    });
     return data;
   }
 }

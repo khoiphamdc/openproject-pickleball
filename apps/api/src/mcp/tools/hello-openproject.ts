@@ -5,7 +5,7 @@ export function registerHelloTools(server: McpServer) {
   server.registerTool(
     "say-hello-openproject",
     {
-      description: "Xin chào OpenProject",
+      description: "Xin chào OpenProject, lời chào, hello",
       inputSchema: z.object({
         name: z.string().optional().describe("Tên người dùng"),
       }),

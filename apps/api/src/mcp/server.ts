@@ -2,6 +2,8 @@ import { McpServer } from "@modelcontextprotocol/server";
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
 import { registerAllTools } from "./tools.js";
 import { registerHelloTools } from "./tools/hello-openproject.js";
+import { registerCsvTools } from "./tools/JiraCsvToProject.js";
+import { registerTypeTools } from "./tools/types.js";
 
 serveStdio(() => {
   const server = new McpServer({
@@ -13,6 +15,9 @@ serveStdio(() => {
 
   // Test McpServer
   registerHelloTools(server);
+  // csv tools
+  registerCsvTools(server);
+  // registerTypeTools(server);
 
   return server;
 });
