@@ -1,17 +1,49 @@
 services:
+  restore:
+    image: alpine:3.22
+    restart: "no"
+    volumes:
+      - pgdata:/target/pgdata
+      - assets:/target/assets
+      - ./backup/openproject-pgdata.tar.gz:/backup/pgdata.tar.gz:ro
+      - ./backup/openproject-assets-volume.tar.gz:/backup/assets.tar.gz:ro
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        if [ ! -f /target/pgdata/PG_VERSION ]; then
+          echo "Restoring PostgreSQL data..."
+          tar -xzf /backup/pgdata.tar.gz -C /target/pgdata
+        else
+          echo "PostgreSQL volume already initialized; skipping restore."
+        fi
+
+        if [ -z "$(ls -A /target/assets)" ]; then
+          echo "Restoring assets..."
+          tar -xzf /backup/assets.tar.gz -C /target/assets
+        else
+          echo "Assets volume already initialized; skipping restore."
+        fi
+
   openproject:
-    image: ${OPENPROJECT_IMAGE:-openproject/openproject:17}
+    image: openproject/openproject@sha256:1931b0bcdceb07c38293c3afafa7fe3da09e9fa76144604b92813d6c6d05c695
     restart: unless-stopped
+    depends_on:
+      restore:
+        condition: service_completed_successfully
     ports:
       - "127.0.0.1:8080:80"
     environment:
-      SECRET_KEY_BASE: ${SECRET_KEY_BASE:?Run init-openproject-env.ps1 first}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:?Set SECRET_KEY_BASE in .env}
       OPENPROJECT_HOST__NAME: localhost:8080
       OPENPROJECT_HTTPS: "false"
       OPENPROJECT_DEFAULT__LANGUAGE: en
     volumes:
       - pgdata:/var/openproject/pgdata
       - assets:/var/openproject/assets
+
 volumes:
   pgdata:
+    name: openproject_pgdata
   assets:
+    name: openproject_assets
