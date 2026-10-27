@@ -1,0 +1,372 @@
+/* Giao diện C03, bản sạch để demo: trắng, đen, xám, viền mỏng, không bóng đổ.
+   Điểm khác bản trước: tab đang chọn gạch chân rõ, ô số liệu 3 cột để không gãy chữ,
+   cột số trong bảng căn phải, thanh điểm theo lưới cố định, không còn dòng chú thích lặp. */
+
+.c03-layout {
+  width: 100%;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 28px 24px 48px;
+  color: #111111;
+  background: #ffffff;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.55;
+  text-align: left;
+}
+
+.c03-header {
+  margin: 0 0 16px;
+  padding: 0 0 14px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.c03-header h1 {
+  margin: 0 0 4px;
+  color: #111111;
+  font-size: 24px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.c03-header .muted {
+  color: #666666;
+}
+
+.c03-layout h2 {
+  margin: 0 0 8px;
+  color: #111111;
+  font-size: 20px;
+  font-weight: 650;
+}
+
+.c03-layout h3 {
+  margin: 28px 0 10px;
+  color: #111111;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.muted {
+  color: #666666;
+  font-size: 14px;
+}
+
+/* Tab: đường kẻ xám của cả thanh, tab đang chọn gạch chân đen đè lên đường đó. */
+.c03-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin: 0 0 20px;
+  padding: 0;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.c03-nav button {
+  margin: 0 24px -1px 0;
+  padding: 6px 0 12px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #666666;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.c03-nav button:hover {
+  color: #111111;
+}
+
+.c03-nav button.nav-active {
+  border-bottom-color: #111111;
+  color: #111111;
+  font-weight: 650;
+}
+
+/* Bộ lọc: 1 hàng, nút cao bằng ô nhập. */
+.c03-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: flex-end;
+  margin: 0 0 24px;
+}
+
+.c03-filter label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #444444;
+  font-size: 13px;
+}
+
+.c03-filter label.filter-checkbox {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.c03-filter button {
+  padding: 8px 14px;
+  background: #111111;
+  border: 1px solid #111111;
+  border-radius: 6px;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.c03-filter input[type='date'],
+.c03-filter input[type='number'],
+.form-grid input {
+  padding: 8px 10px;
+  border: 1px solid #d4d4d4;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #111111;
+}
+
+.c03-main {
+  margin-top: 0;
+  padding: 0;
+}
+
+/* Trang Tổng quan rút gọn: chỉ 1 con số tổng, 1 danh sách hạng, 1 bảng giải thích. */
+.overview-total {
+  margin: 8px 0 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.overview-total-value {
+  color: #111111;
+  font-size: 36px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.overview-total .muted {
+  margin: 4px 0 0;
+}
+
+.rank-list {
+  max-width: 720px;
+  margin: 0 0 24px;
+  padding: 0;
+  list-style: none;
+}
+
+.rank-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid #eeeeee;
+  font-variant-numeric: tabular-nums;
+}
+
+.rank-list li:first-child {
+  border-top: 1px solid #eeeeee;
+}
+
+/* Số liệu: 3 cột x 2 hàng, mỗi ô đủ rộng để nhãn nằm gọn 1 dòng. */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 16px 0 24px;
+}
+
+.kpi {
+  padding: 16px;
+  background: #fafafa;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+}
+
+.kpi-label {
+  color: #666666;
+  font-size: 13px;
+}
+
+.kpi-value {
+  margin-top: 4px;
+  color: #111111;
+  font-size: 28px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Bảng: cột đầu căn trái, cột số căn phải, số đều nhau, tiêu đề kẻ đen mỏng. */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0 24px;
+}
+
+.data-table th {
+  padding: 9px 12px 9px 0;
+  border-bottom: 1px solid #111111;
+  color: #666666;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+}
+
+.data-table td {
+  padding: 10px 12px 10px 0;
+  border-bottom: 1px solid #eeeeee;
+  color: #111111;
+  text-align: left;
+}
+
+.data-table th.num,
+.data-table td.num {
+  padding-right: 0;
+  padding-left: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* Bảng ít cột thì không kéo giãn hết trang, nhìn khỏi trống. */
+.table-narrow {
+  max-width: 720px;
+}
+
+/* Thanh điểm: lưới cố định nhãn / thanh / số, không để thanh trôi xa khỏi nhãn. */
+.bar-row {
+  display: grid;
+  grid-template-columns: 180px 1fr 64px;
+  align-items: center;
+  gap: 12px;
+  max-width: 760px;
+  margin: 10px 0;
+}
+
+.bar-label {
+  color: #333333;
+  font-weight: 500;
+}
+
+.bar-track {
+  height: 8px;
+  overflow: hidden;
+  background: #eeeeee;
+  border-radius: 999px;
+}
+
+.bar-fill {
+  display: block;
+  height: 100%;
+  background: #111111;
+}
+
+.bar-value {
+  color: #111111;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.state-box {
+  margin: 12px 0;
+  padding: 12px 0 12px 12px;
+  border-left: 3px solid #d4d4d4;
+  color: #444444;
+}
+
+.state-box button {
+  margin-top: 8px;
+  padding: 7px 12px;
+  background: #ffffff;
+  border: 1px solid #d4d4d4;
+  border-radius: 6px;
+  color: #111111;
+  cursor: pointer;
+}
+
+.state-error {
+  border-left-color: #b91c1c;
+  color: #7f1d1d;
+}
+
+.task-card {
+  margin: 0;
+  padding: 16px 0;
+  border-top: 1px solid #e5e5e5;
+}
+
+.task-card:last-child {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.task-card h3 {
+  margin: 0 0 8px;
+}
+
+.task-card p {
+  margin: 6px 0;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin: 12px 0;
+}
+
+.form-grid label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #444444;
+  font-size: 13px;
+}
+
+.button-row {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.button-row button {
+  padding: 8px 14px;
+  background: #ffffff;
+  border: 1px solid #d4d4d4;
+  border-radius: 6px;
+  color: #111111;
+  cursor: pointer;
+}
+
+.button-row button:first-child {
+  background: #111111;
+  border-color: #111111;
+  color: #ffffff;
+}
+
+.recent-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recent-list li {
+  padding: 9px 0;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.recent-list li:first-child {
+  border-top: 1px solid #eeeeee;
+}
+
+.c03-layout a {
+  color: #111111;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.c03-footer {
+  margin-top: 32px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e5e5;
+  color: #666666;
+}
