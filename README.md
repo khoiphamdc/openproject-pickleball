@@ -512,7 +512,7 @@ Mẫu chính sách nằm ở `packages/contracts/workflow-policy.example.json` t
 
 ### 5.8. Bug và kiểm tra nghiệm thu
 
-Bốn ảnh không bao gồm Bug. Luồng Bug dùng riêng: TO DO → IN PROGRESS → REVIEW → DONE, REVIEW → IN PROGRESS khi Request Changes, PM hủy/REDO như Task. Bug được gắn làm con trực tiếp của Task/Subtask nguồn và giao cho đúng assignee nguồn. Trong bản demo, bug có quan hệ cha–con và chưa CANCELLED được tính trừ điểm dù bug còn đang mở; Priority xác định mức trừ. Người phát hiện được ghi riêng, không phải người chịu phạt chỉ vì báo bug.
+Bốn ảnh không bao gồm Bug. Luồng Bug dùng riêng: TO DO → IN PROGRESS → REVIEW → DONE, REVIEW → IN PROGRESS khi Request Changes, PM hủy/REDO như Task. Bug được gắn làm con trực tiếp của Task/Subtask nguồn và giao cho đúng assignee nguồn. Trong bản demo, bug có quan hệ cha–con và chưa CANCELLED được tính trừ điểm dù Bug hoặc Task/Subtask nguồn chưa Done; Priority xác định mức trừ. Bug gắn với đơn vị đã tính bị trừ trong điểm đơn vị; nếu nguồn chưa có dòng điểm riêng thì trừ một lần vào tổng điểm người chịu trách nhiệm. Tổng điểm không thấp hơn 0. Người phát hiện được ghi riêng, không phải người chịu phạt chỉ vì báo bug.
 
 | Phép thử cần thực hiện | Kết quả mong đợi |
 |---|---|
@@ -551,7 +551,7 @@ Trước Start work của Task/Subtask (đang TO DO), quản lý duyệt độ k
 - Cancelled, duplicate và not-a-bug bị loại theo quy tắc tương ứng.
 - Một bug chính chỉ có một task nguồn để tính tỷ lệ mặc định; các liên kết tham khảo khác không được cộng lại. Trường hợp liên quan nhiều task phải có cơ chế phân bổ riêng sau này.
 - Task nhiều người làm: tỷ lệ được quản lý duyệt có tổng bằng 1; bản đầu ưu tiên một người chịu trách nhiệm chính.
-- Thiếu baseline/owner/thời điểm nghiệm thu đáng tin cậy: báo “chưa đủ dữ liệu”, không tự điền điểm 0. Subtask DONE chưa được task cha nghiệm thu chỉ nằm trong số đã khai báo hoàn tất, chưa tính vào completedTasks/điểm.
+- Thiếu baseline/owner/thời điểm nghiệm thu đáng tin cậy: chưa cộng điểm nền, không tự điền điểm 0. Bug hợp lệ vẫn bị trừ vào tổng của người chịu trách nhiệm nguồn dù nguồn chưa Done hoặc chưa đủ dữ liệu; không trừ trùng Bug đã tính trong điểm đơn vị.
 
 ### 6.3. Định nghĩa báo cáo
 
@@ -570,6 +570,8 @@ Kỳ báo cáo có `from`, `toExclusive`, múi giờ Asia/Ho_Chi_Minh, thời đ
 API có lịch sử hoạt động và thời điểm hoạt động [17]. A và B phải kiểm tra khả năng xác định lần chuyển DONE và lần nghiệm thu liên quan trên phiên bản thực tế; không dùng `updatedAt` của task làm thời gian hoàn thành. Với dữ liệu mới, lưu sự kiện do bridge ghi và đối chiếu lịch sử; Subtask cần sự kiện nghiệm thu tại task cha, không chỉ lần Complete. Nếu chỉ quan sát bằng polling mà không xác định được thời gian gốc, đánh dấu thời gian ước lượng và loại khỏi điểm đúng hạn. CANCELLED/REDO làm kết quả nghiệm thu hiện hành mất hiệu lực trong phạm vi được mở lại cho đến khi được duyệt lại; lưu lịch sử và lần chốt cũ để đối chiếu, không tái dùng acceptedAt cũ hoặc cộng trùng đơn vị.
 
 ## 7. Quy tắc chấm điểm đề xuất
+
+Preview API hiện dùng `demo-v2`, trong đó Bug hợp lệ bị trừ ngay cả khi Task/Subtask nguồn chưa Done; xem [quy tắc điểm](docs/scoring-rules.md) và [hợp đồng API](docs/api-contract.md).
 
 Đây là **quy tắc bản đầu để nhóm duyệt**, không phải chuẩn đánh giá nhân viên. Độ khó chốt trước khi bắt đầu; cùng một task không được tự tăng điểm sau khi biết kết quả.
 
@@ -590,18 +592,18 @@ So sánh ngày nghiệm thu với hạn gốc theo ngày lịch Việt Nam. Done
 | High | 2 |
 | Critical | 4 |
 
-Chỉ trừ Bug gắn trực tiếp dưới Task/Subtask nguồn. Assignee của Bug phải trùng người chịu trách nhiệm Task/Subtask nguồn. Người phát hiện bug được ghi riêng; không lấy người phát hiện làm người chịu phạt. Tester/PM xác nhận mức độ; AI chỉ được đề xuất.
+Chỉ trừ Bug gắn trực tiếp dưới Task/Subtask nguồn. Assignee của Bug phải trùng người chịu trách nhiệm Task/Subtask nguồn. Bug hợp lệ bị trừ ngay cả khi công việc nguồn chưa Done; Bug trên đơn vị có điểm được trừ trong dòng điểm đơn vị, còn Bug trên nguồn chưa có dòng điểm riêng được trừ vào tổng điểm người phụ trách. Người phát hiện bug được ghi riêng; không lấy người phát hiện làm người chịu phạt. Tester/PM xác nhận mức độ; AI chỉ được đề xuất.
 
 Trong bản demo, Bug có cha là Task/Subtask và chưa bị hủy được xem là hợp lệ để tính; Priority quy đổi sang mức Low/Medium/High/Critical (Immediate tương ứng Critical). Bug duplicate hoặc “not a bug” phải được loại. Một ID bug chỉ được tính một lần cho nguồn. Tỷ lệ đóng góp trên cùng đơn vị phải cộng đúng 100%; nếu chưa có phân bổ được duyệt thì đơn vị chưa đủ dữ liệu để tính.
 
 ```text
-Điểm task/subtask = max(0, story points × hệ số thời hạn − tổng điểm trừ bug)
-Điểm người = tổng(điểm task × tỷ lệ đóng góp được duyệt)
+Điểm đơn vị đã đủ dữ liệu = max(0, story points × hệ số thời hạn − Bug gắn trực tiếp với đơn vị)
+Điểm người = max(0, tổng điểm các đơn vị đã tính − Bug hợp lệ chưa gắn với đơn vị có dòng điểm riêng)
 ```
 
 Không chuẩn hóa tổng điểm thành thang 100 trong bản đầu. Hiển thị đồng thời số task, tổng độ khó, đúng hạn, bug theo mức và điểm. Điểm là chỉ số hỗ trợ review; người nhận việc khó có thể có nhiều bug hơn vì phạm vi lớn.
 
-Ví dụ: story points 5, Done đúng hạn và có một bug Medium hợp lệ thì `max(0, 5 × 1,00 − 1) = 4.00` điểm. Nếu hai người đóng góp 75%/25%, họ nhận 3.00/1.00 điểm. Chỉ làm tròn khi hiển thị/chốt. Task/Subtask phải Done và có story points, ngày nghiệm thu, hạn gốc hợp lệ; nếu có phân bổ nhiều người thì tỷ lệ đóng góp phải hợp lệ.
+Ví dụ: story points 5, Done đúng hạn và có một bug Medium hợp lệ thì `max(0, 5 × 1,00 − 1) = 4.00` điểm. Nếu một người có 5.00 điểm đã tính và có Bug High trên Task chưa Done, tổng là `max(0, 5.00 − 2) = 3.00`. Bug không làm tăng số công việc hoàn thành. Chỉ làm tròn khi hiển thị/chốt. Task/Subtask chỉ cộng điểm nền khi Done và có story points, ngày nghiệm thu, hạn gốc hợp lệ; nếu có phân bổ nhiều người thì tỷ lệ đóng góp phải hợp lệ.
 
 ### 7.4. Ví dụ để kiểm tra chương trình
 

@@ -1,5 +1,7 @@
 ## 7. Quy tắc chấm điểm đề xuất
 
+Bản preview kết nối OpenProject áp dụng `demo-v2`: Bug hợp lệ trên công việc chưa Done vẫn trừ vào tổng người chịu trách nhiệm. Quy tắc này thay đổi cách tổng hợp so với `demo-v1`; các lần preview cũ cần được đối chiếu theo ruleVersion đã lưu.
+
 Đây là **quy tắc bản đầu để nhóm duyệt**, không phải chuẩn đánh giá nhân viên. Độ khó chốt trước khi bắt đầu; cùng một task không được tự tăng điểm sau khi biết kết quả.
 
 ### 7.1. Điểm độ khó
@@ -21,14 +23,14 @@ So sánh ngày nghiệm thu với hạn gốc theo ngày lịch Việt Nam. Done
 
 Chỉ trừ Bug gắn trực tiếp làm con của Task/Subtask nguồn; assignee Bug phải trùng người chịu trách nhiệm công việc nguồn. Người phát hiện bug được ghi riêng và không bị phạt chỉ vì phát hiện. Tester/PM xác nhận mức độ; AI chỉ được đề xuất.
 
-Trong bản demo, Bug có cha là Task/Subtask và chưa bị hủy được xem là hợp lệ; Priority quy đổi sang Low/Medium/High/Critical (Immediate tương ứng Critical). Bug duplicate hoặc “not a bug” phải bị loại. Mỗi ID bug chỉ được tính một lần cho nguồn.
+Trong bản demo, Bug có cha trực tiếp là Task/Subtask và chưa bị hủy được xem là hợp lệ; Priority quy đổi sang Low/Medium/High/Critical (Immediate tương ứng Critical). Bug duplicate hoặc “not a bug” bị loại. Mỗi ID Bug chỉ tính một lần. Bug hợp lệ bị trừ ngay khi được ghi nhận, không chờ Task/Subtask nguồn Done. Nguồn vẫn phải có đúng người phụ trách khớp với assignee Bug.
 
 ```text
-Điểm task/subtask = max(0, story points × hệ số thời hạn − tổng điểm trừ bug)
-Điểm người = tổng(điểm task × tỷ lệ đóng góp được duyệt)
+Điểm đơn vị đã đủ dữ liệu = max(0, story points × hệ số thời hạn − Bug gắn trực tiếp với đơn vị)
+Điểm người = max(0, tổng điểm các đơn vị đã tính − Bug hợp lệ chưa gắn với đơn vị có dòng điểm riêng)
 ```
 
-Tỷ lệ đóng góp của những người trên cùng task phải cộng đúng 100% (cho phép sai số số học rất nhỏ); mỗi người chỉ xuất hiện một lần trong phân bổ. Nếu chưa có phân bổ được duyệt, task chưa đủ dữ liệu để tính. Khi không có đóng góp nhiều người, quản lý lưu một người với tỷ lệ 100%.
+Bug gắn với một đơn vị đã tính được trừ trong điểm đơn vị đó. Bug gắn với Task/Subtask chưa Done hoặc chưa đủ dữ liệu chấm điểm vẫn trừ vào tổng của người chịu trách nhiệm nguồn, nhưng không tạo điểm nền cho công việc ấy. Không trừ cùng một Bug lần thứ hai. Tổng điểm người không thấp hơn 0. Tỷ lệ đóng góp của những người trên cùng task phải cộng đúng 100% (cho phép sai số số học rất nhỏ); mỗi người chỉ xuất hiện một lần trong phân bổ. Nếu chưa có phân bổ được duyệt, đơn vị chưa đủ dữ liệu để cộng điểm nền.
 
 Không chuẩn hóa tổng điểm thành thang 100 trong bản đầu. Hiển thị đồng thời số task, tổng độ khó, đúng hạn, bug theo mức và điểm. Điểm là chỉ số hỗ trợ review; người nhận việc khó có thể có nhiều bug hơn vì phạm vi lớn.
 
@@ -57,7 +59,7 @@ Ví dụ task có độ khó 5, được chấp nhận đúng hạn và có mộ
 
 Nếu hai người có tỷ lệ đóng góp 75% và 25%, lần lượt nhận 3.00 và 1.00 điểm. Giao diện làm tròn để hiển thị; phép tính nội bộ giữ số lẻ để không làm lệch tổng.
 
-Task chỉ được chấm khi là đơn vị thực thi (Task không có Subtask hoặc Subtask lá), trạng thái là DONE, có story points, ngày nghiệm thu, hạn gốc hợp lệ và assignee. Bug cha–con trừ vào đơn vị nguồn. Thiếu dữ liệu cần thiết thì trả trạng thái chưa đủ dữ liệu, không tự coi là 0 điểm.
+Task chỉ được cộng điểm nền khi là đơn vị thực thi (Task không có Subtask hoặc Subtask lá), trạng thái là DONE, có story points, ngày nghiệm thu, hạn gốc hợp lệ và assignee. Bug cha–con hợp lệ vẫn trừ dù nguồn chưa thỏa điều kiện cộng điểm; khi nguồn không có dòng điểm riêng, khoản trừ được áp dụng một lần vào tổng người phụ trách. Thiếu dữ liệu điểm nền không tự biến thành 0 điểm.
 
 
 Nguồn và bối cảnh đầy đủ: [README](../README.md), mục 14.

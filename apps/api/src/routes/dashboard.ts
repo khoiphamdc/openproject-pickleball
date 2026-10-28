@@ -64,7 +64,7 @@ dashboardRouter.get(['/dashboard', '/scores'], async (req, res, next) => {
         })),
         run: {
           ruleVersion: preview.ruleVersion, incomplete: preview.incomplete,
-          totalScore: preview.grossPoints, totals: null,
+          totalScore: preview.netPoints, totals: null,
           scoredTaskCount: preview.scoredTaskCount, skipped: preview.skipped,
         },
       },

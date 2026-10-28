@@ -1,7 +1,7 @@
 export interface Task {
   id: number; subject: string; type: string; status: string; isExecutionUnit: boolean;
   currentAssigneeId: number | null; currentAssigneeName: string | null;
-  dueDate: string | null; storyPoints: number | null;
+  dueDate: string | null; acceptedAt: string | null; storyPoints: number | null;
   parentId: number | null; epicId: number | null; epicSubject: string | null;
 }
 export interface Dashboard {
@@ -18,7 +18,7 @@ export interface Dashboard {
   preview: {
     ruleVersion: string; factor: number | null; grossPoints: number | null; netPoints: number | null;
     candidateCount: number; scoredTaskCount: number; skippedTaskCount: number;
-    people: Array<{ userId: number; name: string | null; grossPoints: number; netPoints: number; bugPenalty: number; taskCount: number }>;
+    people: Array<{ userId: number; name: string | null; grossPoints: number; netPoints: number; bugPenalty: number; scoredBugPenalty: number; unscoredBugPenalty: number; bugCount: number; unscoredBugCount: number; taskCount: number }>;
   tasks: Array<{ workPackageId: number; userId: number; difficulty: number; factor: number; grossPoints: number; netPoints: number; bugCount: number; bugPenalty: number }>;
     skipped: Array<{ workPackageId: number; reasons: string[] }>;
   };

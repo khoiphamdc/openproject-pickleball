@@ -28,7 +28,7 @@ export default function App() {
   }
 
   return <div className="c03-layout">
-    <header className="c03-header"><h1>Thống kê và bảng điểm</h1><p className="muted">OpenProject · Điểm demo tạm tính theo dữ liệu hiện tại</p></header>
+    <header className="c03-header"><h1>Thống kê và bảng điểm</h1><p className="muted">OpenProject · Điểm tính theo dữ liệu đến thời điểm hiện tại</p></header>
     <form className="c03-filter" onSubmit={submit}><label>ID dự án<input type="number" min="1" value={id} onChange={e => setId(e.target.value)} /></label><button type="submit">Xem báo cáo</button></form>
     {loading && <div className="state-box" role="status">Đang tải dữ liệu…</div>}
     {error && <div className="state-box state-error" role="alert">{error}</div>}

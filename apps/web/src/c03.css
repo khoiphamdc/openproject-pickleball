@@ -195,6 +195,147 @@
   text-anchor: middle;
 }
 
+.overview-chart-person-hit {
+  cursor: pointer;
+}
+
+.overview-chart-person-hit:hover .overview-chart-person,
+.overview-chart-person-hit:focus .overview-chart-person,
+.overview-chart-person-hit.is-selected .overview-chart-person {
+  fill: #1d4ed8;
+  text-decoration: underline;
+}
+
+.overview-chart-person-hit:focus {
+  outline: none;
+}
+
+.member-score-detail {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.member-score-detail-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.member-score-detail-heading h3,
+.member-score-detail h4 {
+  margin: 0 0 6px;
+}
+
+.member-score-detail-heading .muted {
+  margin: 0 0 14px;
+}
+
+.member-score-detail-close {
+  padding: 6px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  color: #111;
+  background: #fff;
+  cursor: pointer;
+}
+
+.member-score-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.member-score-metrics > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.member-score-metrics span {
+  color: #475569;
+  font-size: 12px;
+}
+
+.member-score-metrics strong {
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+.member-score-rate-note {
+  margin: 8px 0 18px;
+  font-size: 12px;
+}
+
+.member-score-table {
+  width: 100%;
+  margin: 10px 0 14px;
+  border-collapse: collapse;
+  background: #fff;
+  font-size: 13px;
+}
+
+.member-score-table th,
+.member-score-table td {
+  padding: 9px 10px;
+  border: 1px solid #e2e8f0;
+  text-align: left;
+  vertical-align: top;
+}
+
+.member-score-table th {
+  background: #f1f5f9;
+  white-space: nowrap;
+}
+
+.member-score-table td:last-child {
+  white-space: nowrap;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.member-score-totals {
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.member-score-totals p {
+  margin: 5px 0;
+}
+
+.member-score-total {
+  padding-top: 8px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 16px;
+}
+
+.member-score-skipped {
+  margin-top: 14px;
+}
+
+.member-score-skipped ul {
+  margin: 6px 0 0;
+  padding-left: 20px;
+}
+
+@media (max-width: 720px) {
+  .member-score-metrics {
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+  }
+
+  .member-score-detail {
+    padding: 12px;
+  }
+}
+
 .overview-chart-legend {
   display: flex;
   flex-wrap: wrap;
