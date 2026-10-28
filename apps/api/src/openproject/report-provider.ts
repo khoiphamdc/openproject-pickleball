@@ -1,4 +1,5 @@
 import { env } from "../config/env.js";
+import { AppError } from "../shared/errors.js";
 import {
     configureReportDatasetProvider,
     type ReportDatasetProvider,
@@ -17,12 +18,14 @@ interface OpenProjectLink {
 interface OpenProjectWorkPackage {
     id: number;
     subject?: string;
+    storyPoints?: number | null;
     dueDate?: string | null;
     _links?: {
         type?: OpenProjectLink;
         status?: OpenProjectLink;
         parent?: OpenProjectLink;
         assignee?: OpenProjectLink;
+        priority?: OpenProjectLink;
         project?: OpenProjectLink;
     };
 }
@@ -67,6 +70,11 @@ function getParentId(
     return getLinkedId(workPackage._links?.parent?.href);
 }
 
+function getUserId(href?: string): number | null {
+    const match = href?.match(/\/users\/(\d+)\/?$/);
+    return match ? Number(match[1]) : null;
+}
+
 async function fetchWorkPackages(
     projectId: number,
 ): Promise<OpenProjectWorkPackage[]> {
@@ -77,8 +85,9 @@ async function fetchWorkPackages(
     let total = Number.POSITIVE_INFINITY;
 
     const result: OpenProjectWorkPackage[] = [];
+    const seenIds = new Set<number>();
 
-    while (offset <= total) {
+    while (result.length < total) {
         const url = new URL(
             `${baseUrl}/api/v3/projects/${projectId}/work_packages`,
         );
@@ -88,7 +97,9 @@ async function fetchWorkPackages(
         url.searchParams.set("filters", "[]");
         url.searchParams.set("sortBy", '[["id","asc"]]');
 
-        const response = await fetch(url, {
+        let response: Response;
+        try {
+            response = await fetch(url, {
             headers: {
                 Authorization:
                     "Basic " +
@@ -98,28 +109,39 @@ async function fetchWorkPackages(
                 Accept: "application/hal+json",
             },
             signal: AbortSignal.timeout(15_000),
-        });
+            });
+        } catch {
+            throw new AppError("OPENPROJECT_UNAVAILABLE", "Không kết nối được OpenProject.", 503);
+        }
 
         if (!response.ok) {
-            throw new Error(
-                `OpenProject API trả HTTP ${response.status} khi lấy work packages của project ${projectId}.`,
-            );
+            if (response.status === 404) throw new AppError("PROJECT_NOT_FOUND", "Không tìm thấy dự án hoặc tài khoản không có quyền xem.", 404);
+            throw new AppError("OPENPROJECT_ERROR", `OpenProject trả HTTP ${response.status}.`, 502);
         }
 
         const payload =
             (await response.json()) as OpenProjectCollection;
 
-        const elements = payload._embedded?.elements ?? [];
+        if (!Number.isSafeInteger(payload.total) || (payload.total as number) < 0 || !Array.isArray(payload._embedded?.elements)) {
+            throw new Error("OpenProject returned an invalid work package collection");
+        }
+        const elements = payload._embedded.elements;
+
+        for (const item of elements) {
+            if (!Number.isSafeInteger(item.id) || seenIds.has(item.id)) {
+                throw new Error("OpenProject returned duplicate or invalid work package IDs while paging");
+            }
+            seenIds.add(item.id);
+        }
 
         result.push(...elements);
 
-        total = payload.total ?? result.length;
+        total = payload.total as number;
 
-        if (elements.length === 0) {
-            break;
+        if (elements.length === 0 && result.length < total) {
+            throw new Error("OpenProject returned an incomplete paginated result");
         }
-
-        offset += elements.length;
+        offset += 1;
     }
 
     return result;
@@ -133,7 +155,7 @@ function toTaskSnapshots(
     for (const workPackage of workPackages) {
         const parentId = getParentId(workPackage);
 
-        if (parentId !== null) {
+        if (parentId !== null && getType(workPackage).toUpperCase() === "SUBTASK") {
             parentIds.add(parentId);
         }
     }
@@ -162,12 +184,16 @@ function toTaskSnapshots(
 
         const task: TaskSnapshot = {
             id: workPackage.id,
+            subject: workPackage.subject ?? "",
+            storyPoints: workPackage.storyPoints ?? null,
+            currentPriority: workPackage._links?.priority?.title ?? null,
+            currentAssigneeName: workPackage._links?.assignee?.title ?? null,
             type,
             parentId,
             isExecutionUnit,
 
             ownerAtBaselineId: null,
-            currentAssigneeId: getLinkedId(
+            currentAssigneeId: getUserId(
                 workPackage._links?.assignee?.href,
             ),
 
@@ -201,6 +227,8 @@ function toDefectSnapshots(
         )
         .map((workPackage) => ({
             id: workPackage.id,
+            subject: workPackage.subject ?? "",
+            status: getStatus(workPackage),
 
             // A source-task relationship must be explicitly mapped.
             // Do not assume that the bug's parent is its source task.

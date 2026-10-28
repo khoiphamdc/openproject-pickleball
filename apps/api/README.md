@@ -1,7 +1,6 @@
 # API va MCP — phan can trien khai
 
-Thu muc nay chua co app hay package.json. A khoi tao Node.js 22 LTS + TypeScript
-va ghi lenh install/build/test/dev chinh xac vao day sau khi hoan thanh.
+Đã có API báo cáo local; xem cách cấu hình và chạy ở README gốc. `npm test` kiểm tra phân trang và quy tắc điểm; `npm run build` kiểm tra TypeScript. Chưa hỗ trợ chốt điểm và xác thực nhiều người.
 
 Entrypoint REST cho web (127.0.0.1:3001); MCP stdio wrapper cho AI client.
 Che do nhieu member: wrapper goi REST gateway da xac thuc, module adapter va

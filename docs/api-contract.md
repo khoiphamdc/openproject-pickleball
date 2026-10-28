@@ -1,5 +1,7 @@
 ## 10. Hợp đồng giữa các phần
 
+`GET /dashboard?projectId=<id>` trả `report`, `openProjectUrl`, danh sách `tasks`, `bugs` và `preview`. `GET /scores?projectId=<id>` trả `report` và `preview`. Đã chọn lại quy tắc `c01-v1`: cần baseline được duyệt, bằng chứng nghiệm thu và bug được xác nhận. Nguồn các dữ liệu này chưa được kết nối; mọi đơn vị Done được liệt kê trong `skipped`, `grossPoints` và `factor` là null, `incomplete` là true. Đây chưa phải API tính điểm hoàn chỉnh. Không chốt điểm, không sử dụng CSV và không ghi OpenProject. `projectId` sai trả 400, dự án không tìm thấy trả 404, OpenProject không kết nối trả 503. Cần xác thực/phân quyền trước khi mở cho nhiều người.
+
 Đầu tiên thống nhất tại `docs/data-contract.md` và `packages/contracts/`. Bản mẫu JSON trong ZIP là dữ liệu chuẩn nội bộ, **không phải payload gửi nguyên xi lên OpenProject API**.
 
 Một bản ghi task tối thiểu cần: `instanceId`, `workPackageId`, `projectId`, `type`, `parentId`, `isExecutionUnit`, `ownerAtBaselineId`, `currentAssigneeId`, `baselineDifficulty`, `baselineDueDate`, `acceptedAt`, `completedAt` (Subtask), `acceptanceEventId`/`acceptedBy`, `status`, `baselineVersion`, `timeEvidence` và `contributions`. Bổ sung `workstream`, `businessOwnerId`, `reviewerIds` theo mục 4.1 khi triển khai phân quyền; fixture chấm điểm cũ chỉ dùng kiểm tra số học, không dùng làm fixture kiểm tra quyền.

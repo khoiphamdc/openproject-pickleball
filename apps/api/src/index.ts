@@ -21,6 +21,7 @@ import express from "express";
 import { env } from "./config/env.js";
 import { healthRouter } from "./routes/health.js";
 import { reportsRouter } from "./routes/reports.js";
+import { dashboardRouter } from "./routes/dashboard.js";
 import { errorHandler } from "./shared/errors.js";
 import { logger } from "./shared/logger.js";
 import { registerOpenProjectReportProvider } from "./openproject/report-provider.js";
@@ -30,9 +31,10 @@ app.use(express.json({ limit: "2mb" }));
 
 app.use(healthRouter);
 app.use(reportsRouter);
+app.use(dashboardRouter);
 
 app.use(errorHandler);
 
-app.listen(env.port, () => {
+app.listen(env.port, '127.0.0.1', () => {
   logger.info(`API listening on :${env.port}`);
 });

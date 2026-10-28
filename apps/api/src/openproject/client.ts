@@ -183,7 +183,7 @@ export class OpenProjectClient {
       "/api/v3/projects",
       {
         params: {
-          page: params?.page,
+          offset: params?.page,
           pageSize: params?.perPage,
           filters: params?.filters,
           sortBy: params?.sortBy,
@@ -332,7 +332,7 @@ export class OpenProjectClient {
         params: {
           projectId: params?.projectId,
           filters: params?.filters,
-          page: params?.page,
+          offset: params?.page,
           pageSize: params?.perPage,
           sortBy: params?.sortBy,
         },
@@ -689,4 +689,4 @@ export const client = new OpenProjectClient({
   apiKey: API_TOKEN,
 });
 
-console.error(`[OpenProjectClient] Khởi tạo với baseUrl=${BASE_URL}`);
+console.error('[OpenProjectClient] Đã khởi tạo client.');

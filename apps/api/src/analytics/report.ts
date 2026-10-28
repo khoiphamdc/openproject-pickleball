@@ -42,6 +42,10 @@ export interface Contribution {
 
 export interface TaskSnapshot {
   id: number;
+  subject?: string;
+  storyPoints?: number | null;
+  currentPriority?: string | null;
+  currentAssigneeName?: string | null;
   projectId?: number;
   type: string;
   parentId?: number | null;
@@ -66,6 +70,8 @@ export interface TaskSnapshot {
 
 export interface DefectSnapshot {
   id: number;
+  subject?: string;
+  status?: string;
   sourceTaskId: number | null;
   severity: "Low" | "Medium" | "High" | "Critical";
   validatedAt: string | null;

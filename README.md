@@ -1,5 +1,16 @@
 # OpenProject Community: cài đặt Windows và triển khai mở rộng cho nhóm 3 người
 
+## Chạy API đọc dữ liệu OpenProject trên máy local
+
+Cấu hình `apps/api/.env` với `OPENPROJECT_BASE_URL`, `OPENPROJECT_INSTANCE_ID` và `OPENPROJECT_SERVICE_TOKEN` (hoặc `OPENPROJECT_API_TOKEN`). Không đưa token vào frontend hay Git. Chạy trong `apps/api`:
+
+```powershell
+npm ci
+npm run backend
+```
+
+Gọi `GET http://127.0.0.1:3001/dashboard?projectId=6` để lấy dữ liệu. Người làm web cần tích hợp API này; giao diện đã được trả về bản gốc. API chạy local, chưa có xác thực cho nhiều người; chưa kết nối baseline và ngày nghiệm thu nên chưa tính điểm hoàn chỉnh. Xem `docs/api-contract.md`.
+
 **Phiên bản tài liệu:** 1.2 — 10/10/2026 — workflow riêng Epic/Story/Task/Subtask theo bốn ảnh; cập nhật phân quyền và AI/MCP  
 **Người dùng:** nhóm 3 người phát triển trên Windows hoặc macOS, bàn giao qua Git.  
 **Phạm vi:** AI tạo/cập nhật công việc qua MCP, thống kê task/bug, tính điểm cá nhân.
@@ -15,7 +26,7 @@ Nhóm xây một ứng dụng mở rộng kết nối với OpenProject Communit
 
 OpenProject lưu công việc và workflow. Ứng dụng mở rộng lưu các quy tắc điểm, hạn đã cam kết và dữ liệu quy trách nhiệm. Đây là thiết kế do nhóm triển khai. MCP tích hợp sẵn của OpenProject thuộc Enterprise Professional trở lên; tài liệu này dùng MCP riêng để kết nối Community qua API, không yêu cầu mua MCP tích hợp sẵn [1][2]. Chi phí dịch vụ AI phụ thuộc công cụ/model nhóm chọn, không nằm trong phí OpenProject Community.
 
-**Bộ ZIP đi kèm là khung thư mục và tài liệu, chưa phải ứng dụng AI chạy hoàn chỉnh.** File Compose dùng để chạy OpenProject thử nghiệm; phần API/web sẽ được A, B, C lập trình theo hướng dẫn bên dưới. Hướng dẫn đã được đối chiếu nguồn chính thức; chưa được chạy thử trên một máy Windows thật trong phiên soạn này.
+**Dự án chưa phải ứng dụng AI chạy hoàn chỉnh.** Bản thống kê local và giới hạn được mô tả ở đầu README. File Compose dùng để chạy OpenProject thử nghiệm.
 
 ### Công nghệ đề xuất
 
