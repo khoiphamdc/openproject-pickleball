@@ -1,64 +1,8 @@
-import { Bar, EmptyState } from '../components/common';
-import { formatScore, userName } from '../services/mockData';
+import { peopleSummary, points } from '../services/dashboard';
 import type { PageProps } from './types';
 
-export default function Scoreboard({ run }: PageProps) {
-  const ranked = [...run.totals].sort((a, b) => b.score - a.score || a.userId - b.userId);
-  const maxScore = Math.max(0, ...ranked.map((p) => p.score));
-
-  if (ranked.length === 0) {
-    return (
-      <section>
-        <h2>Bảng điểm</h2>
-        <EmptyState text="Chưa có người nào được tính điểm trong kỳ đã chọn." />
-      </section>
-    );
-  }
-
-  return (
-    <section>
-      <h2>Bảng điểm</h2>
-      <p className="muted">
-        Xếp theo điểm giảm dần, bằng điểm thì xếp theo id tăng dần. Điểm này là điểm mẫu theo quy
-        tắc {run.ruleVersion}, chưa phải điểm đã chốt — chốt điểm là việc của C04 khi có API thật.
-      </p>
-      <table className="data-table table-narrow">
-        <thead>
-          <tr>
-            <th>Hạng</th>
-            <th>Người</th>
-            <th className="num">Điểm</th>
-            <th className="num">Task đã tính</th>
-          </tr>
-        </thead>
-        <tbody>
-          {ranked.map((person) => {
-            // Hạng chung cho người bằng điểm.
-            const rank = ranked.findIndex((p) => p.score === person.score) + 1;
-            return (
-              <tr key={person.userId}>
-                <td>{rank}</td>
-                <td>{userName(person.userId)}</td>
-                <td className="num">
-                  <strong>{formatScore(person.score)}</strong>
-                </td>
-                <td className="num">{person.taskCount}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-
-      <h3>Biểu đồ điểm</h3>
-      {ranked.map((person) => (
-        <Bar
-          key={person.userId}
-          label={userName(person.userId)}
-          value={person.score}
-          max={maxScore}
-        />
-      ))}
-      <p className="muted">Tổng kỳ: {formatScore(run.totalScore)} điểm.</p>
-    </section>
-  );
+export default function Scoreboard({ data }: PageProps) {
+  const ranked = [...data.preview.people].sort((a, b) => b.netPoints - a.netPoints || a.userId - b.userId);
+  const people = peopleSummary(data);
+  return <section><h2>Bảng điểm tạm</h2>{ranked.length ? <><table className="data-table table-narrow"><thead><tr><th>Hạng</th><th>Người</th><th>Điểm tạm</th><th>Task đã tính</th><th>Subtask đã tính</th></tr></thead><tbody>{ranked.map(person => { const counts = people.find(p => p.id === person.userId); return <tr key={person.userId}><td>{ranked.findIndex(p => p.netPoints === person.netPoints) + 1}</td><td>{person.name || 'Người dùng'} (id {person.userId})</td><td>{points(person.netPoints)}</td><td>{counts?.tasksScored ?? 'N/A'}</td><td>{counts?.subtasksScored ?? 'N/A'}</td></tr>; })}</tbody></table><h3>Biểu đồ điểm</h3>{ranked.map(person => <div className="bar-row" key={person.userId}><span className="bar-label">{person.name || 'Người dùng'} (id {person.userId})</span><span className="bar-track"><span className="bar-fill" style={{ width: `${ranked[0].netPoints > 0 ? person.netPoints / ranked[0].netPoints * 100 : 0}%` }} /></span><span className="bar-value">{points(person.netPoints)}</span></div>)}</> : <p>Chưa có điểm tạm.</p>}</section>;
 }

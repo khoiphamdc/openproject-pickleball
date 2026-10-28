@@ -1,13 +1,12 @@
 // Scoring cho web, bản mock của C03.
-// Logic này chép đúng quy tắc c01-v1 của apps/api/src/scoring/score.ts,
+// Logic này chép đúng quy tắc demo-v1 của apps/api/src/scoring/score.ts,
 // KHÔNG gọi API, KHÔNG đọc DB. Tới C04, web sẽ gọi API của B05 thay cho
 // hàm scoreRun() ở đây, còn giao diện thì giữ nguyên.
-// Quy tắc: điểm task = max(0, độ khó x hệ số hạn - trừ bug đã xác thực).
-// Hệ số hạn tính theo ngày lịch Asia/Ho_Chi_Minh, hạn là hết ngày đó.
+// Quy tắc: điểm task = max(0, story points * hệ số hạn - trừ bug hợp lệ).
 
 export type BugSeverity = 'Low' | 'Medium' | 'High' | 'Critical';
 
-export const RULE_VERSION = 'c01-v1';
+export const RULE_VERSION = 'demo-v1';
 export const SCORE_TIMEZONE = 'Asia/Ho_Chi_Minh';
 
 export const BUG_PENALTY: Record<BugSeverity, number> = {
@@ -28,6 +27,8 @@ export interface BugInput {
   bugId: number;
   severity: BugSeverity;
   validated: boolean;
+  isDuplicate?: boolean;
+  isNotABug?: boolean;
 }
 
 export interface TaskInput {
@@ -46,9 +47,10 @@ export type SkippedReason =
   | 'not-execution-unit'
   | 'not-done'
   | 'missing-difficulty'
+  | 'missing-deadline-data'
   | 'invalid-difficulty'
-  | 'missing-due-date'
-  | 'missing-accepted-at'
+  | 'invalid-bug-id'
+  | 'invalid-bug-severity'
   | 'invalid-contribution-shares';
 
 export type ScoreTaskResult =
@@ -57,7 +59,7 @@ export type ScoreTaskResult =
       workPackageId: number;
       taskScore: number;
       allocations: Array<{ userId: number; score: number }>;
-      breakdown: { base: number; factor: number; penalty: number; diffDays: number };
+      breakdown: { base: number; factor: number; grossPoints: number; penalty: number };
     }
   | { ok: false; workPackageId: number; reason: SkippedReason };
 
@@ -82,6 +84,13 @@ function hcmDayNumber(value: string): number {
   return Date.UTC(get('year'), get('month') - 1, get('day')) / 86_400_000;
 }
 
+function validatedBugPenalty(bugs: BugInput[], penalties: Record<BugSeverity, number>): number {
+  const unique = new Map(bugs.map(bug => [bug.bugId, bug]));
+  return [...unique.values()]
+    .filter(bug => bug.validated && !bug.isDuplicate && !bug.isNotABug)
+    .reduce((sum, bug) => sum + penalties[bug.severity], 0);
+}
+
 export function deadlineFactor(acceptedAt: string, dueDate: string): number {
   const diffDays = hcmDayNumber(acceptedAt) - hcmDayNumber(dueDate);
   if (diffDays <= -1) return 1.05;
@@ -93,29 +102,35 @@ export function deadlineFactor(acceptedAt: string, dueDate: string): number {
 export function scoreTask(input: TaskInput): ScoreTaskResult {
   const { workPackageId } = input;
   if (!input.isExecutionUnit) return { ok: false, workPackageId, reason: 'not-execution-unit' };
-  if (input.status !== 'DONE') return { ok: false, workPackageId, reason: 'not-done' };
+  if (input.status.trim().toUpperCase() !== 'DONE') return { ok: false, workPackageId, reason: 'not-done' };
   if (input.difficulty === null || input.difficulty === undefined) {
     return { ok: false, workPackageId, reason: 'missing-difficulty' };
   }
   if (!VALID_DIFFICULTIES.includes(input.difficulty)) {
     return { ok: false, workPackageId, reason: 'invalid-difficulty' };
   }
-  if (!input.baselineDueDate) return { ok: false, workPackageId, reason: 'missing-due-date' };
-  if (!input.acceptedAt) return { ok: false, workPackageId, reason: 'missing-accepted-at' };
+  if (!input.acceptedAt || !input.baselineDueDate) {
+    return { ok: false, workPackageId, reason: 'missing-deadline-data' };
+  }
   const shareSum = input.contributions.reduce((s, c) => s + c.share, 0);
   const sharesValid =
     input.contributions.length > 0 &&
-    input.contributions.every((c) => c.share >= 0 && c.share <= 1) &&
-    shareSum > 0 &&
-    shareSum <= 1 + 1e-9;
+    input.contributions.every((c) => Number.isInteger(c.userId) && c.userId > 0 && Number.isFinite(c.share) && c.share > 0 && c.share <= 1) &&
+    new Set(input.contributions.map(c => c.userId)).size === input.contributions.length &&
+    Math.abs(shareSum - 1) <= 1e-9;
   if (!sharesValid) return { ok: false, workPackageId, reason: 'invalid-contribution-shares' };
 
+  if (input.bugs.some(bug => !Number.isInteger(bug.bugId) || bug.bugId <= 0)) {
+    return { ok: false, workPackageId, reason: 'invalid-bug-id' };
+  }
+  if (input.bugs.some(bug => !Object.hasOwn(BUG_PENALTY, bug.severity))) {
+    return { ok: false, workPackageId, reason: 'invalid-bug-severity' };
+  }
+
+  const penalty = validatedBugPenalty(input.bugs, BUG_PENALTY);
   const factor = deadlineFactor(input.acceptedAt, input.baselineDueDate);
-  const diffDays = hcmDayNumber(input.acceptedAt) - hcmDayNumber(input.baselineDueDate);
-  const penalty = input.bugs
-    .filter((b) => b.validated)
-    .reduce((sum, b) => sum + BUG_PENALTY[b.severity], 0);
-  const taskScore = Math.max(0, input.difficulty * factor - penalty);
+  const grossPoints = input.difficulty * factor;
+  const taskScore = Math.max(0, grossPoints - penalty);
   return {
     ok: true,
     workPackageId,
@@ -124,23 +139,15 @@ export function scoreTask(input: TaskInput): ScoreTaskResult {
       userId: c.userId,
       score: taskScore * c.share,
     })),
-    breakdown: { base: input.difficulty, factor, penalty, diffDays },
+    breakdown: { base: input.difficulty, factor, grossPoints, penalty },
   };
 }
 
 export interface ScoreConfig {
-  early: number;
-  onTime: number;
-  late12: number;
-  late3plus: number;
   penalties: Record<BugSeverity, number>;
 }
 
 export const DEFAULT_CONFIG: ScoreConfig = {
-  early: 1.05,
-  onTime: 1.0,
-  late12: 0.9,
-  late3plus: 0.8,
   penalties: { ...BUG_PENALTY },
 };
 
@@ -148,19 +155,8 @@ export const DEFAULT_CONFIG: ScoreConfig = {
 export function scoreTaskWithConfig(input: TaskInput, config: ScoreConfig): ScoreTaskResult {
   const base = scoreTask(input);
   if (!base.ok) return base;
-  const diffDays = base.breakdown.diffDays;
-  const factor =
-    diffDays <= -1
-      ? config.early
-      : diffDays === 0
-        ? config.onTime
-        : diffDays <= 2
-          ? config.late12
-          : config.late3plus;
-  const penalty = input.bugs
-    .filter((b) => b.validated)
-    .reduce((sum, b) => sum + config.penalties[b.severity], 0);
-  const taskScore = Math.max(0, base.breakdown.base * factor - penalty);
+  const penalty = validatedBugPenalty(input.bugs, config.penalties);
+  const taskScore = Math.max(0, base.breakdown.grossPoints - penalty);
   return {
     ok: true,
     workPackageId: input.workPackageId,
@@ -169,7 +165,7 @@ export function scoreTaskWithConfig(input: TaskInput, config: ScoreConfig): Scor
       userId: c.userId,
       score: taskScore * c.share,
     })),
-    breakdown: { base: base.breakdown.base, factor, penalty, diffDays },
+    breakdown: { ...base.breakdown, penalty },
   };
 }
 

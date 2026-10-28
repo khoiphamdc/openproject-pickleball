@@ -50,8 +50,8 @@ export function ScoreBreakdownTable({ tasks }: { tasks: TaskInput[] }) {
         <tr>
           <th>Task</th>
           <th className="num">Độ khó</th>
-          <th className="num">Hệ số hạn</th>
-          <th className="num">Trừ bug đã xác thực</th>
+          <th className="num">Bug đã tính</th>
+          <th className="num">Trừ bug</th>
           <th className="num">Điểm task</th>
         </tr>
       </thead>
@@ -64,7 +64,7 @@ export function ScoreBreakdownTable({ tasks }: { tasks: TaskInput[] }) {
                 <td>
                   #{task.workPackageId} — {task.subject}
                 </td>
-                <td colSpan={4}>Không tính được: {result.reason}</td>
+                <td colSpan={3}>Không tính được: {result.reason}</td>
               </tr>
             );
           }
@@ -74,7 +74,7 @@ export function ScoreBreakdownTable({ tasks }: { tasks: TaskInput[] }) {
                 #{task.workPackageId} — {task.subject}
               </td>
               <td className="num">{result.breakdown.base}</td>
-              <td className="num">{result.breakdown.factor.toFixed(2)}</td>
+              <td className="num">{task.bugs.filter(bug => bug.validated && !bug.isDuplicate && !bug.isNotABug).length}</td>
               <td className="num">{formatScore(result.breakdown.penalty)}</td>
               <td className="num">
                 <strong>{formatScore(result.taskScore)}</strong>

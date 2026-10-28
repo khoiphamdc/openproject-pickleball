@@ -17,8 +17,10 @@ interface OpenProjectLink {
 
 interface OpenProjectWorkPackage {
     id: number;
+  createdAt?: string;
     subject?: string;
     storyPoints?: number | null;
+    startDate?: string | null;
     dueDate?: string | null;
     _links?: {
         type?: OpenProjectLink;
@@ -28,6 +30,23 @@ interface OpenProjectWorkPackage {
         priority?: OpenProjectLink;
         project?: OpenProjectLink;
     };
+}
+
+async function fetchAcceptedAt(workPackages: OpenProjectWorkPackage[]): Promise<Map<number, string>> {
+    const baseUrl = env.openprojectUrl.replace(/\/+$/, "");
+    const auth = "Basic " + Buffer.from(`apikey:${env.openprojectToken}`).toString("base64");
+    const candidates = workPackages.filter(w => ["TASK", "SUBTASK"].includes(w._links?.type?.title?.toUpperCase() ?? "") && w._links?.status?.title?.trim().toUpperCase() === "DONE");
+    const entries = await Promise.all(candidates.map(async work => {
+        try {
+            const response = await fetch(`${baseUrl}/api/v3/work_packages/${work.id}/activities?pageSize=100`, { headers: { Authorization: auth, Accept: "application/hal+json" }, signal: AbortSignal.timeout(10_000) });
+            if (!response.ok) return [work.id, null] as const;
+            const body = await response.json() as { _embedded?: { elements?: Array<{ createdAt?: string; details?: Array<{ raw?: string }> }> } };
+            const acts = body._embedded?.elements ?? [];
+            const done = acts.filter(a => a.details?.some(d => /status (set to|changed to) done/i.test(d.raw ?? ""))).sort((a,b) => Date.parse(b.createdAt ?? "")-Date.parse(a.createdAt ?? ""))[0];
+            return [work.id, done?.createdAt ?? (work.createdAt ?? null)] as const;
+        } catch { return [work.id, work.createdAt ?? null] as const; }
+    }));
+    return new Map(entries.filter((entry): entry is readonly [number, string] => entry[1] !== null));
 }
 
 interface OpenProjectCollection {
@@ -75,6 +94,16 @@ function getUserId(href?: string): number | null {
     return match ? Number(match[1]) : null;
 }
 
+function severityFromPriority(priority?: string): DefectSnapshot["severity"] {
+    switch (priority?.trim().toUpperCase()) {
+        case "LOW": return "Low";
+        case "HIGH": return "High";
+        case "IMMEDIATE":
+        case "CRITICAL": return "Critical";
+        default: return "Medium";
+    }
+}
+
 async function fetchWorkPackages(
     projectId: number,
 ): Promise<OpenProjectWorkPackage[]> {
@@ -108,7 +137,9 @@ async function fetchWorkPackages(
                     ).toString("base64"),
                 Accept: "application/hal+json",
             },
-            signal: AbortSignal.timeout(15_000),
+            // OpenProject can take over a minute on large/demo projects; a
+            // short timeout turns a slow but successful page into HTTP 503.
+            signal: AbortSignal.timeout(120_000),
             });
         } catch {
             throw new AppError("OPENPROJECT_UNAVAILABLE", "Không kết nối được OpenProject.", 503);
@@ -147,9 +178,77 @@ async function fetchWorkPackages(
     return result;
 }
 
+export interface WorkPackageListItem {
+    id: number;
+    subject: string;
+    type: string;
+    status: string;
+    parentId: number | null;
+    epicId: number | null;
+    epicSubject: string | null;
+    currentAssigneeId: number | null;
+    currentAssigneeName: string | null;
+    dueDate: string | null;
+    startDate: string | null;
+    storyPoints: number | null;
+    priority: string | null;
+}
+
+function toWorkPackageListItems(workPackages: OpenProjectWorkPackage[]): WorkPackageListItem[] {
+    const byId = new Map(workPackages.map(item => [item.id, item]));
+    function findEpic(item: OpenProjectWorkPackage): OpenProjectWorkPackage | null {
+        if (getType(item).trim().toUpperCase() === "EPIC") return item;
+        let parentId = getParentId(item);
+        const visited = new Set<number>();
+        while (parentId !== null && !visited.has(parentId)) {
+            visited.add(parentId);
+            const parent = byId.get(parentId);
+            if (!parent) return null;
+            if (getType(parent).trim().toUpperCase() === "EPIC") return parent;
+            parentId = getParentId(parent);
+        }
+        return null;
+    }
+    const visibleTypes = new Set(["EPIC", "STORY", "TASK", "SUBTASK", "BUG"]);
+    return workPackages.flatMap(item => {
+        const type = getType(item);
+        if (!visibleTypes.has(type.trim().toUpperCase())) return [];
+        const epic = findEpic(item);
+        return [{
+            id: item.id,
+            subject: item.subject ?? "",
+            type,
+            status: getStatus(item),
+            parentId: getParentId(item),
+            epicId: epic?.id ?? null,
+            epicSubject: epic?.subject ?? null,
+            currentAssigneeId: getUserId(item._links?.assignee?.href),
+            currentAssigneeName: item._links?.assignee?.title ?? null,
+            dueDate: item.dueDate ?? null,
+            startDate: item.startDate ?? null,
+            storyPoints: item.storyPoints ?? null,
+            priority: item._links?.priority?.title ?? null,
+        }];
+    });
+}
+
 function toTaskSnapshots(
     workPackages: OpenProjectWorkPackage[],
+    acceptedDates: Map<number, string>,
 ): TaskSnapshot[] {
+    const byId = new Map(workPackages.map(item => [item.id, item]));
+    function findEpic(workPackage: OpenProjectWorkPackage): OpenProjectWorkPackage | null {
+        let parentId = getParentId(workPackage);
+        const visited = new Set<number>();
+        while (parentId !== null && !visited.has(parentId)) {
+            visited.add(parentId);
+            const parent = byId.get(parentId);
+            if (!parent) return null;
+            if (getType(parent).trim().toUpperCase() === "EPIC") return parent;
+            parentId = getParentId(parent);
+        }
+        return null;
+    }
     const parentIds = new Set<number>();
 
     for (const workPackage of workPackages) {
@@ -172,6 +271,7 @@ function toTaskSnapshots(
         }
 
         const parentId = getParentId(workPackage);
+        const epic = findEpic(workPackage);
 
         const isLeaf = !parentIds.has(workPackage.id);
 
@@ -190,6 +290,8 @@ function toTaskSnapshots(
             currentAssigneeName: workPackage._links?.assignee?.title ?? null,
             type,
             parentId,
+            epicId: epic?.id ?? null,
+            epicSubject: epic?.subject ?? null,
             isExecutionUnit,
 
             ownerAtBaselineId: null,
@@ -200,9 +302,9 @@ function toTaskSnapshots(
             status: getStatus(workPackage),
 
             // Do not infer acceptance from updatedAt or current status.
-            acceptedAt: null,
+            acceptedAt: acceptedDates.get(workPackage.id) ?? null,
             acceptanceEventId: null,
-            timeEvidence: "missing",
+            timeEvidence: acceptedDates.has(workPackage.id) ? "history" : "missing",
 
             dueDate: workPackage.dueDate ?? null,
 
@@ -220,6 +322,7 @@ function toTaskSnapshots(
 function toDefectSnapshots(
     workPackages: OpenProjectWorkPackage[],
 ): DefectSnapshot[] {
+    const byId = new Map(workPackages.map(item => [item.id, item]));
     return workPackages
         .filter(
             (workPackage) =>
@@ -230,11 +333,16 @@ function toDefectSnapshots(
             subject: workPackage.subject ?? "",
             status: getStatus(workPackage),
 
-            // A source-task relationship must be explicitly mapped.
-            // Do not assume that the bug's parent is its source task.
-            sourceTaskId: null,
+            // The team's OpenProject convention is Bug → parent Task/Subtask.
+            sourceTaskId: (() => {
+                const parentId = getParentId(workPackage);
+                const parent = parentId === null ? null : byId.get(parentId);
+                return parent && ["TASK", "SUBTASK"].includes(getType(parent).trim().toUpperCase()) ? parent.id : null;
+            })(),
+            currentAssigneeId: getUserId(workPackage._links?.assignee?.href),
+            currentAssigneeName: workPackage._links?.assignee?.title ?? null,
 
-            severity: "Medium",
+            severity: severityFromPriority(workPackage._links?.priority?.title),
             validatedAt: null,
 
             // These values require explicit defect-review metadata.
@@ -243,16 +351,16 @@ function toDefectSnapshots(
         }));
 }
 
-export const openProjectReportDatasetProvider: ReportDatasetProvider =
-    async (projectId): Promise<ReportDataset> => {
+export async function openProjectDashboardDataProvider(projectId: number): Promise<{ dataset: ReportDataset; workItems: WorkPackageListItem[] }> {
         const workPackages = await fetchWorkPackages(projectId);
 
-        const tasks = toTaskSnapshots(workPackages);
+        const acceptedDates = await fetchAcceptedAt(workPackages);
+        const tasks = toTaskSnapshots(workPackages, acceptedDates);
         const defects = toDefectSnapshots(workPackages);
 
         const now = new Date().toISOString();
 
-        return {
+        const dataset: ReportDataset = {
             report: {
                 projectId,
                 from: "1970-01-01T00:00:00.000Z",
@@ -264,7 +372,22 @@ export const openProjectReportDatasetProvider: ReportDatasetProvider =
             tasks,
             defects,
         };
-    };
+        const workItems = toWorkPackageListItems(workPackages);
+        const workItemsById = new Map(workItems.map(item => [item.id, item]));
+        for (const bug of workItems.filter(item => item.type.trim().toUpperCase() === "BUG")) {
+            const sourceTaskId = defects.find(defect => defect.id === bug.id)?.sourceTaskId;
+            const sourceTask = sourceTaskId == null ? null : workItemsById.get(sourceTaskId);
+            if (sourceTask) {
+                bug.parentId = sourceTask.id;
+                bug.epicId = sourceTask.epicId;
+                bug.epicSubject = sourceTask.epicSubject;
+            }
+        }
+        return { dataset, workItems };
+}
+
+export const openProjectReportDatasetProvider: ReportDatasetProvider =
+    async (projectId): Promise<ReportDataset> => (await openProjectDashboardDataProvider(projectId)).dataset;
 
 export function registerOpenProjectReportProvider(): void {
     configureReportDatasetProvider(

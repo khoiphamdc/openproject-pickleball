@@ -1,9 +1,10 @@
 // C01 — Scoring function (finalised draft, mock-first).
 // Pure function: no UI, no network, no DB. Same input => same output.
-// Rule version: c01-v1. See C01-SPEC.md for the decisions this file locks in.
+// Rule version: demo-v1. Deadline factor and validated bug penalties both apply.
 //
 // Formula (docs/scoring-rules.md §7):
-//   taskScore   = max(0, difficulty x deadlineFactor - sum(validated bug penalties))
+//   grossScore  = difficulty * deadlineFactor(acceptedAt, dueDate)
+//   taskScore   = max(0, grossScore - sum(valid bug penalties))
 //   personScore = sum(taskScore x contributionShare) over that person's tasks
 // Bug penalties: Low 0.5, Medium 1, High 2, Critical 4.
 // Difficulty must be one of 1 | 2 | 3 | 5 | 8. No rounding inside this
@@ -12,7 +13,7 @@
 export type Difficulty = 1 | 2 | 3 | 5 | 8;
 export type BugSeverity = 'Low' | 'Medium' | 'High' | 'Critical';
 
-export const RULE_VERSION = 'c01-v1';
+export const RULE_VERSION = 'demo-v1';
 export const SCORE_TIMEZONE = 'Asia/Ho_Chi_Minh';
 
 export const BUG_PENALTY: Record<BugSeverity, number> = {
@@ -57,6 +58,20 @@ function hcmDayNumber(value: Date | string): number {
   return Date.UTC(get('year'), get('month') - 1, get('day')) / 86_400_000;
 }
 
+function isValidDateValue(value: string): boolean {
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (dateOnly) {
+    const year = Number(dateOnly[1]);
+    const month = Number(dateOnly[2]);
+    const day = Number(dateOnly[3]);
+    const parsed = new Date(Date.UTC(year, month - 1, day));
+    return parsed.getUTCFullYear() === year &&
+      parsed.getUTCMonth() === month - 1 &&
+      parsed.getUTCDate() === day;
+  }
+  return Number.isFinite(Date.parse(value));
+}
+
 export function deadlineFactor(acceptedAt: Date | string, dueDate: Date | string): number {
   const diffDays = hcmDayNumber(acceptedAt) - hcmDayNumber(dueDate);
   if (diffDays <= -1) return 1.05;
@@ -86,20 +101,21 @@ export function computeTaskScore(input: ScoreInput) {
   if (!(input.contributionShare >= 0 && input.contributionShare <= 1)) {
     throw new Error(`Invalid contributionShare: ${input.contributionShare}. Must be in [0, 1].`);
   }
-  const base = input.difficulty;
   const factor = deadlineFactor(input.acceptedAt, input.dueDate);
+  const grossPoints = input.difficulty * factor;
   const penalty = input.bugs.reduce((sum, b) => {
     const p = BUG_PENALTY[b.severity];
     if (p === undefined) throw new Error(`Invalid bug severity: ${String(b.severity)}`);
     return sum + p;
   }, 0);
-  const taskScore = Math.max(0, base * factor - penalty);
+  const taskScore = Math.max(0, grossPoints - penalty);
   return {
     taskScore,
     personScore: taskScore * input.contributionShare,
     breakdown: {
-      base,
+      base: input.difficulty,
       factor,
+      grossPoints,
       penalty,
       share: input.contributionShare,
       ruleVersion: RULE_VERSION,
@@ -133,18 +149,27 @@ export interface TaskScoreInput {
   status: string;
   difficulty: number | null;
   baselineDueDate: string | null;
+  /** Task: reviewer approval time. Subtask: parent-task acceptance time for this child, never its Complete time. */
   acceptedAt: string | null;
   contributions: ContributionInput[];
-  bugs: Array<{ severity: BugSeverity; validated: boolean }>;
+  /** B supplies linked defect records; this scorer de-duplicates by bugId and excludes invalidated records. */
+  bugs: Array<{
+    bugId: number;
+    severity: BugSeverity;
+    validated: boolean;
+    isDuplicate?: boolean;
+    isNotABug?: boolean;
+  }>;
 }
 
 export type InsufficientReason =
   | 'not-execution-unit'
   | 'not-done'
   | 'missing-difficulty'
+  | 'missing-deadline-data'
   | 'invalid-difficulty'
-  | 'missing-due-date'
-  | 'missing-accepted-at'
+  | 'invalid-bug-id'
+  | 'invalid-bug-severity'
   | 'invalid-contribution-shares';
 
 export type ScoreTaskResult =
@@ -156,8 +181,8 @@ export type ScoreTaskResult =
       breakdown: {
         base: number;
         factor: number;
+        grossPoints: number;
         penalty: number;
-        diffDays: number;
         ruleVersion: string;
       };
     }
@@ -166,29 +191,38 @@ export type ScoreTaskResult =
 export function scoreTask(input: TaskScoreInput): ScoreTaskResult {
   const { workPackageId } = input;
   if (!input.isExecutionUnit) return { ok: false, workPackageId, reason: 'not-execution-unit' };
-  if (input.status !== 'DONE') return { ok: false, workPackageId, reason: 'not-done' };
+  if (input.status.trim().toUpperCase() !== 'DONE') return { ok: false, workPackageId, reason: 'not-done' };
   if (input.difficulty === null || input.difficulty === undefined) {
     return { ok: false, workPackageId, reason: 'missing-difficulty' };
   }
   if (!VALID_DIFFICULTIES.includes(input.difficulty)) {
     return { ok: false, workPackageId, reason: 'invalid-difficulty' };
   }
-  if (!input.baselineDueDate) return { ok: false, workPackageId, reason: 'missing-due-date' };
-  if (!input.acceptedAt) return { ok: false, workPackageId, reason: 'missing-accepted-at' };
+  if (!input.acceptedAt || !input.baselineDueDate) {
+    return { ok: false, workPackageId, reason: 'missing-deadline-data' };
+  }
   const shareSum = input.contributions.reduce((s, c) => s + c.share, 0);
   const sharesValid =
     input.contributions.length > 0 &&
-    input.contributions.every((c) => c.share >= 0 && c.share <= 1) &&
-    shareSum > 0 &&
-    shareSum <= 1 + 1e-9;
+    input.contributions.every((c) => Number.isInteger(c.userId) && c.userId > 0 && Number.isFinite(c.share) && c.share > 0 && c.share <= 1) &&
+    new Set(input.contributions.map((c) => c.userId)).size === input.contributions.length &&
+    Math.abs(shareSum - 1) <= 1e-9;
   if (!sharesValid) return { ok: false, workPackageId, reason: 'invalid-contribution-shares' };
 
+  if (input.bugs.some((bug) => !Number.isInteger(bug.bugId) || bug.bugId <= 0)) {
+    return { ok: false, workPackageId, reason: 'invalid-bug-id' };
+  }
+  if (input.bugs.some((bug) => !Object.hasOwn(BUG_PENALTY, bug.severity))) {
+    return { ok: false, workPackageId, reason: 'invalid-bug-severity' };
+  }
+
+  const uniqueBugs = new Map(input.bugs.map((bug) => [bug.bugId, bug]));
+  const penalty = [...uniqueBugs.values()]
+    .filter((bug) => bug.validated && !bug.isDuplicate && !bug.isNotABug)
+    .reduce((sum, bug) => sum + BUG_PENALTY[bug.severity], 0);
   const factor = deadlineFactor(input.acceptedAt, input.baselineDueDate);
-  const diffDays = hcmDayNumber(input.acceptedAt) - hcmDayNumber(input.baselineDueDate);
-  const penalty = input.bugs
-    .filter((b) => b.validated)
-    .reduce((sum, b) => sum + BUG_PENALTY[b.severity], 0);
-  const taskScore = Math.max(0, input.difficulty * factor - penalty);
+  const grossPoints = input.difficulty * factor;
+  const taskScore = Math.max(0, grossPoints - penalty);
   return {
     ok: true,
     workPackageId,
@@ -200,8 +234,8 @@ export function scoreTask(input: TaskScoreInput): ScoreTaskResult {
     breakdown: {
       base: input.difficulty,
       factor,
+      grossPoints,
       penalty,
-      diffDays,
       ruleVersion: RULE_VERSION,
     },
   };
@@ -245,7 +279,7 @@ export function aggregatePersonScores(results: ScoreTaskResult[]): PersonScore[]
 //    the UI can show "kỳ chưa đủ dữ liệu" instead of a misleading total.
 //  - REPRODUCIBILITY: same task list => same totals, scored list and
 //    skipped list. `ruleVersion` and `asOf` are recorded metadata only:
-//    this function always computes with the c01-v1 rules above; a rule
+//    this function always computes with the RULE_VERSION rules above; a rule
 //    change needs a new function version, not a different label.
 //  - An empty period is NOT incomplete: totals [], totalScore 0, and
 //    incomplete false (nothing was missing, there was simply nothing).
@@ -253,7 +287,7 @@ export function aggregatePersonScores(results: ScoreTaskResult[]): PersonScore[]
 
 export interface ScoreRunInput {
   tasks: TaskScoreInput[];
-  /** Defaults to RULE_VERSION ('c01-v1'). Metadata only, see above. */
+  /** Defaults to RULE_VERSION ('demo-v1'). Metadata only, see above. */
   ruleVersion?: string;
   /** Period snapshot time, e.g. an ISO timestamp. Metadata only. */
   asOf?: string | null;

@@ -49,6 +49,8 @@ export interface TaskSnapshot {
   projectId?: number;
   type: string;
   parentId?: number | null;
+  epicId?: number | null;
+  epicSubject?: string | null;
   isExecutionUnit: boolean;
 
   ownerAtBaselineId: number | null;
@@ -73,6 +75,8 @@ export interface DefectSnapshot {
   subject?: string;
   status?: string;
   sourceTaskId: number | null;
+  currentAssigneeId?: number | null;
+  currentAssigneeName?: string | null;
   severity: "Low" | "Medium" | "High" | "Critical";
   validatedAt: string | null;
   isDuplicate: boolean;

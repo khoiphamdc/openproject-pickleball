@@ -218,7 +218,7 @@ Vào Administration → Work packages → Types. Dùng loại đã có; tạo lo
 | Subtask | Phần nhỏ của task, có người và hạn riêng khi cần |
 | Bug | Lỗi đã phát hiện, có bước tái hiện và liên kết nguồn |
 
-Dùng quan hệ Parent/Child để tạo Epic → Story → Task → Subtask. Đây là quy ước nhóm; tên type không tự ép được toàn bộ cấu trúc phân cấp. A kiểm tra cấu trúc trong ứng dụng tích hợp. Với Bug, dùng quan hệ `relates` đến task nguồn và bản ghi xác nhận trong ứng dụng mở rộng, không coi mọi liên kết relates là nguyên nhân bug [10].
+Dùng quan hệ Parent/Child để tạo Epic → Story/Task → Subtask. Đây là quy ước nhóm; tên type không tự ép được toàn bộ cấu trúc phân cấp. Với Bug, đặt Bug làm con trực tiếp của Task hoặc Subtask nguồn; giao Bug cho đúng assignee đang chịu trách nhiệm công việc nguồn. Web/API dùng quan hệ cha–con này để thống kê và trừ điểm; không dùng `relates` làm nguồn trừ điểm [10].
 
 ### API token
 
@@ -512,7 +512,7 @@ Mẫu chính sách nằm ở `packages/contracts/workflow-policy.example.json` t
 
 ### 5.8. Bug và kiểm tra nghiệm thu
 
-Bốn ảnh không bao gồm Bug. Luồng Bug tạm đề xuất riêng: TO DO → IN PROGRESS → REVIEW → DONE, REVIEW → IN PROGRESS khi Request Changes, PM hủy/REDO như Task. Nhóm cần duyệt luồng Bug trước triển khai; không coi đó là nội dung suy ra từ ảnh. Xác nhận bug hợp lệ là thuộc tính riêng, không đồng nghĩa bug đã sửa DONE; bug hợp lệ còn mở vẫn được tính chất lượng.
+Bốn ảnh không bao gồm Bug. Luồng Bug dùng riêng: TO DO → IN PROGRESS → REVIEW → DONE, REVIEW → IN PROGRESS khi Request Changes, PM hủy/REDO như Task. Bug được gắn làm con trực tiếp của Task/Subtask nguồn và giao cho đúng assignee nguồn. Trong bản demo, bug có quan hệ cha–con và chưa CANCELLED được tính trừ điểm dù bug còn đang mở; Priority xác định mức trừ. Người phát hiện được ghi riêng, không phải người chịu phạt chỉ vì báo bug.
 
 | Phép thử cần thực hiện | Kết quả mong đợi |
 |---|---|
@@ -579,14 +579,7 @@ Chọn 1, 2, 3, 5 hoặc 8 điểm: từ việc nhỏ, rõ cách làm đến vi�
 
 ### 7.2. Hệ số thời hạn
 
-| Kết quả | Hệ số |
-|---|---:|
-| Được chấp nhận sớm ít nhất 1 ngày so với hạn gốc | 1.05 |
-| Được chấp nhận trong ngày hạn gốc | 1.00 |
-| Trễ 1–2 ngày | 0.90 |
-| Trễ từ 3 ngày | 0.80 |
-
-So sánh **ngày được chấp nhận**, không phải ngày gửi REVIEW hay ngày tự Complete Subtask. Subtask lấy ngày nghiệm thu phần việc ở task cha theo mục 5.7. Bản đầu dùng ngày lịch ở Asia/Ho_Chi_Minh; hạn ngày có điểm cuối 23:59:59. Chưa có quy tắc tự loại ngày nghỉ. Việc chờ phụ thuộc hoặc đổi phạm vi được quản lý xử lý bằng phiên bản baseline và lý do, không tự sửa ngày gốc.
+So sánh ngày nghiệm thu với hạn gốc theo ngày lịch Việt Nam. Done đúng hạn có hệ số **1,00**, không bị trừ điểm thời hạn; hoàn thành sớm ít nhất 1 ngày được hệ số 1,05; trễ 1–2 ngày là 0,90; trễ trên 2 ngày là 0,80. Nếu thiếu ngày nghiệm thu hoặc hạn gốc thì chưa đủ dữ liệu để tính, không tự gán hệ số.
 
 ### 7.3. Điểm trừ bug
 
@@ -597,14 +590,18 @@ So sánh **ngày được chấp nhận**, không phải ngày gửi REVIEW hay 
 | High | 2 |
 | Critical | 4 |
 
-Chỉ trừ bug hợp lệ có task nguồn đã xác nhận; không tính người tạo bản ghi bug là người gây lỗi. Tester được chỉ định/PM xác nhận mức độ và liên kết, AI chỉ được đề xuất.
+Chỉ trừ Bug gắn trực tiếp dưới Task/Subtask nguồn. Assignee của Bug phải trùng người chịu trách nhiệm Task/Subtask nguồn. Người phát hiện bug được ghi riêng; không lấy người phát hiện làm người chịu phạt. Tester/PM xác nhận mức độ; AI chỉ được đề xuất.
+
+Trong bản demo, Bug có cha là Task/Subtask và chưa bị hủy được xem là hợp lệ để tính; Priority quy đổi sang mức Low/Medium/High/Critical (Immediate tương ứng Critical). Bug duplicate hoặc “not a bug” phải được loại. Một ID bug chỉ được tính một lần cho nguồn. Tỷ lệ đóng góp trên cùng đơn vị phải cộng đúng 100%; nếu chưa có phân bổ được duyệt thì đơn vị chưa đủ dữ liệu để tính.
 
 ```text
-Điểm task = max(0, điểm độ khó × hệ số thời hạn − tổng điểm trừ bug)
+Điểm task/subtask = max(0, story points × hệ số thời hạn − tổng điểm trừ bug)
 Điểm người = tổng(điểm task × tỷ lệ đóng góp được duyệt)
 ```
 
 Không chuẩn hóa tổng điểm thành thang 100 trong bản đầu. Hiển thị đồng thời số task, tổng độ khó, đúng hạn, bug theo mức và điểm. Điểm là chỉ số hỗ trợ review; người nhận việc khó có thể có nhiều bug hơn vì phạm vi lớn.
+
+Ví dụ: story points 5, Done đúng hạn và có một bug Medium hợp lệ thì `max(0, 5 × 1,00 − 1) = 4.00` điểm. Nếu hai người đóng góp 75%/25%, họ nhận 3.00/1.00 điểm. Chỉ làm tròn khi hiển thị/chốt. Task/Subtask phải Done và có story points, ngày nghiệm thu, hạn gốc hợp lệ; nếu có phân bổ nhiều người thì tỷ lệ đóng góp phải hợp lệ.
 
 ### 7.4. Ví dụ để kiểm tra chương trình
 

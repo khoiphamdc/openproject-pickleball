@@ -2,8 +2,8 @@ node_modules/
 dist/
 build/
 coverage/
-# .env
-# .env.*
+.env
+.env.*
 !.env.example
 runtime/*
 !runtime/.gitkeep

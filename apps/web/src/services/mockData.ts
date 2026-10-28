@@ -1,6 +1,5 @@
 // Dữ liệu mẫu cho C03, chép đúng samples/demo-data.json của nhóm.
-// File gốc ghi ruleVersion là demo-v1, nhưng điểm ở đây tính theo c01-v1
-// (hàm scoring.ts), và giao diện ghi rõ là c01-v1 để khỏi nhầm.
+// Dữ liệu mẫu dùng ruleVersion demo-v1 như hàm scoring.ts.
 // Dữ liệu mẫu này là hư cấu, mã task không phải mã thật trên OpenProject,
 // nên link OpenProject ở giao diện chỉ là link mẫu trong chế độ mock.
 // Tới C04, thay hàm loadMock() này bằng gọi API của B05, giao diện giữ nguyên.

@@ -147,6 +147,134 @@
   margin: 4px 0 0;
 }
 
+.overview-chart {
+  margin: 20px 0 28px;
+  padding: 18px 20px 14px;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+}
+
+.overview-chart-heading h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 650;
+}
+
+.overview-chart-heading p {
+  margin: 0 0 16px;
+}
+
+.overview-chart-scroll {
+  overflow-x: auto;
+}
+
+.overview-chart-svg {
+  display: block;
+  width: 100%;
+  min-width: 900px;
+  height: auto;
+}
+
+.overview-chart-gridline {
+  stroke: #e5e5e5;
+  stroke-width: 1;
+}
+
+.overview-chart-value {
+  fill: #333333;
+  font-size: 13px;
+  font-weight: 600;
+  text-anchor: middle;
+  font-variant-numeric: tabular-nums;
+}
+
+.overview-chart-person {
+  fill: #222222;
+  font-size: 14px;
+  font-weight: 550;
+  text-anchor: middle;
+}
+
+.overview-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  margin: 4px 0 0;
+}
+
+.overview-chart-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #444444;
+  font-size: 13px;
+}
+
+.overview-chart-legend-item i {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.overview-chart-note {
+  margin: 10px 0 0;
+  font-size: 12px;
+}
+
+.overview-project-counts {
+  min-height: 240px;
+  display: flex;
+  align-items: end;
+  justify-content: center;
+  gap: clamp(28px, 8vw, 110px);
+  padding: 18px 12px 0;
+  border-bottom: 1px solid #d8d8d8;
+}
+
+.overview-project-count {
+  min-width: 110px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.overview-project-count-bar {
+  width: min(70px, 12vw);
+  border-radius: 6px 6px 0 0;
+}
+
+.overview-project-count strong {
+  font-size: 18px;
+}
+
+.overview-note {
+  margin: 20px 0;
+  padding: 14px 16px;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.overview-note > summary {
+  cursor: pointer;
+  font-weight: 650;
+}
+
+.overview-note-content section {
+  margin-top: 16px;
+}
+
+.overview-note-content h3 {
+  margin-bottom: 6px;
+}
+
+.overview-note-content ul {
+  max-height: 280px;
+  overflow: auto;
+}
+
 .rank-list {
   max-width: 720px;
   margin: 0 0 24px;

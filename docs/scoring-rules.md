@@ -8,14 +8,7 @@ Chọn 1, 2, 3, 5 hoặc 8 điểm: từ việc nhỏ, rõ cách làm đến vi�
 
 ### 7.2. Hệ số thời hạn
 
-| Kết quả | Hệ số |
-|---|---:|
-| Được chấp nhận sớm ít nhất 1 ngày so với hạn gốc | 1.05 |
-| Được chấp nhận trong ngày hạn gốc | 1.00 |
-| Trễ 1–2 ngày | 0.90 |
-| Trễ từ 3 ngày | 0.80 |
-
-So sánh **ngày được chấp nhận**, không phải ngày gửi REVIEW hay ngày tự Complete Subtask. Subtask lấy ngày nghiệm thu phần việc ở task cha theo mục 5.7. Bản đầu dùng ngày lịch ở Asia/Ho_Chi_Minh; hạn ngày có điểm cuối 23:59:59. Chưa có quy tắc tự loại ngày nghỉ. Việc chờ phụ thuộc hoặc đổi phạm vi được quản lý xử lý bằng phiên bản baseline và lý do, không tự sửa ngày gốc.
+So sánh ngày nghiệm thu với hạn gốc theo ngày lịch Việt Nam. Done đúng hạn có hệ số **1,00**, không bị trừ điểm thời hạn; hoàn thành sớm ít nhất 1 ngày được hệ số 1,05; trễ 1–2 ngày là 0,90; trễ trên 2 ngày là 0,80. Thiếu ngày nghiệm thu hoặc hạn gốc thì chưa đủ dữ liệu để tính.
 
 ### 7.3. Điểm trừ bug
 
@@ -26,12 +19,16 @@ So sánh **ngày được chấp nhận**, không phải ngày gửi REVIEW hay 
 | High | 2 |
 | Critical | 4 |
 
-Chỉ trừ bug hợp lệ có task nguồn đã xác nhận; không tính người tạo bản ghi bug là người gây lỗi. Tester được chỉ định/PM xác nhận mức độ và liên kết, AI chỉ được đề xuất.
+Chỉ trừ Bug gắn trực tiếp làm con của Task/Subtask nguồn; assignee Bug phải trùng người chịu trách nhiệm công việc nguồn. Người phát hiện bug được ghi riêng và không bị phạt chỉ vì phát hiện. Tester/PM xác nhận mức độ; AI chỉ được đề xuất.
+
+Trong bản demo, Bug có cha là Task/Subtask và chưa bị hủy được xem là hợp lệ; Priority quy đổi sang Low/Medium/High/Critical (Immediate tương ứng Critical). Bug duplicate hoặc “not a bug” phải bị loại. Mỗi ID bug chỉ được tính một lần cho nguồn.
 
 ```text
-Điểm task = max(0, điểm độ khó × hệ số thời hạn − tổng điểm trừ bug)
+Điểm task/subtask = max(0, story points × hệ số thời hạn − tổng điểm trừ bug)
 Điểm người = tổng(điểm task × tỷ lệ đóng góp được duyệt)
 ```
+
+Tỷ lệ đóng góp của những người trên cùng task phải cộng đúng 100% (cho phép sai số số học rất nhỏ); mỗi người chỉ xuất hiện một lần trong phân bổ. Nếu chưa có phân bổ được duyệt, task chưa đủ dữ liệu để tính. Khi không có đóng góp nhiều người, quản lý lưu một người với tỷ lệ 100%.
 
 Không chuẩn hóa tổng điểm thành thang 100 trong bản đầu. Hiển thị đồng thời số task, tổng độ khó, đúng hạn, bug theo mức và điểm. Điểm là chỉ số hỗ trợ review; người nhận việc khó có thể có nhiều bug hơn vì phạm vi lớn.
 
@@ -49,6 +46,18 @@ Không chuẩn hóa tổng điểm thành thang 100 trong bản đầu. Hiển t
 Kết quả kỳ mẫu: **A = 6.20; B = 6.10; C = 3.00**. Có 6 task, 4 bug; bug/task = 0.6667 và tỷ lệ task có bug = 66.67%. Mỗi người làm 2 task, tỷ trọng 33.33%. Task 106 bị chặn điểm âm.
 
 Task được reopen không cộng thêm lần hoàn thành. Điểm tạm tính có thể thay đổi khi bug mới được xác nhận. Lần chốt điểm lưu `ruleVersion`, baseline, dữ liệu đầu vào và `asOf`; muốn sửa điểm đã chốt cần tạo lần tính mới, giữ lần cũ để đối chiếu.
+
+### Cách đọc điểm cho một task
+
+Ví dụ task có độ khó 5, được chấp nhận đúng hạn và có một bug Medium đã xác nhận:
+
+```text
+Điểm task = max(0, 5 × 1,00 − 1) = 4.00
+```
+
+Nếu hai người có tỷ lệ đóng góp 75% và 25%, lần lượt nhận 3.00 và 1.00 điểm. Giao diện làm tròn để hiển thị; phép tính nội bộ giữ số lẻ để không làm lệch tổng.
+
+Task chỉ được chấm khi là đơn vị thực thi (Task không có Subtask hoặc Subtask lá), trạng thái là DONE, có story points, ngày nghiệm thu, hạn gốc hợp lệ và assignee. Bug cha–con trừ vào đơn vị nguồn. Thiếu dữ liệu cần thiết thì trả trạng thái chưa đủ dữ liệu, không tự coi là 0 điểm.
 
 
 Nguồn và bối cảnh đầy đủ: [README](../README.md), mục 14.
